@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holyrood 2026 — Scottish Parliament Election Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #111827;
+    --bg3: #1a2235;
+    --border: #2a3450;
+    --text: #e8eaf2;
+    --text-muted: #7a8aaa;
+    --text-dim: #4a5878;
+    --accent: #f0c040;
+
+    --snp: #FDF38E;
+    --lab: #E4003B;
+    --con: #0087DC;
+    --lib: #FAA61A;
+    --grn: #00B140;
+    --rfm: #12B6CF;
+    --alba: #005EB8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    position: sticky;
+    top: 0;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .header-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .election-countdown {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .countdown-number {
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 500;
+    display: block;
+  }
+
+  .add-poll-btn {
+    background: var(--accent);
+    color: #0a0e1a;
+    border: none;
+    padding: 9px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .add-poll-btn:hover {
+    background: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    padding: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* SECTION HEADERS */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* LATEST POLL STRIP */
+  .latest-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .party-chip {
+    background: var(--bg2);
+    padding: 16px 12px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+
+  .party-chip:hover { background: var(--bg3); }
+
+  .party-chip-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .party-chip-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .party-chip-change {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    margin-top: 4px;
+    color: var(--text-muted);
+  }
+
+  .change-up { color: #4ade80; }
+  .change-down { color: #f87171; }
+
+  .party-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+  }
+
+  /* GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .chart-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .chart-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .chart-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 260px;
+  }
+
+  /* SEAT PROJECTION */
+  .seat-chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .seat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .seat-total-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .parliament-bar {
+    display: flex;
+    height: 48px;
+    width: 100%;
+    overflow: hidden;
+    gap: 2px;
+    margin-bottom: 20px;
+  }
+
+  .parliament-segment {
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .parliament-segment:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .seats-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .seat-party {
+    background: var(--bg2);
+    padding: 14px 10px;
+    text-align: center;
+  }
+
+  .seat-party-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .seat-party-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .majority-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .majority-marker {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  .majority-tag {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    font-size: 0.6rem;
+    white-space: nowrap;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    width: 600px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 36px;
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .modal-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    letter-spacing: 0.08em;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 24px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  input[type="text"], input[type="date"], input[type="number"] {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0e1a;
+    border: none;
+    padding: 12px 28px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { background: #fff; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+  /* DATA TABLE */
+  .polls-table-wrap {
+    margin-bottom: 40px;
+  }
+
+  .polls-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+  }
+
+  .polls-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .polls-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,52,80,0.5);
+    color: var(--text-muted);
+  }
+
+  .polls-table tr:hover td { background: var(--bg3); }
+
+  .polls-table td.pollster { color: var(--text); font-weight: 500; }
+
+  .delete-row {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    transition: color 0.2s;
+    padding: 0;
+  }
+
+  .delete-row:hover { color: #f87171; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-sources a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    margin-left: 16px;
+    transition: color 0.2s;
+  }
+
+  .footer-sources a:hover { color: var(--accent); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+
+  .empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="header-title">Holyrood 2026</span>
+    <span class="header-subtitle">Scottish Parliament Election Tracker</span>
+  </div>
+  <div class="header-right">
+    <div class="election-countdown">
+      <span class="countdown-number" id="daysLeft">—</span>
+      days to 7 May 2026
+    </div>
+    <button class="add-poll-btn" onclick="openModal()">+ Add Poll</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- LATEST POLLING STRIP -->
+  <div class="section-label">Latest Constituency Vote Intention</div>
+  <div class="latest-strip" id="latestStrip">
+    <div class="empty-state" style="grid-column:1/-1;padding:30px;">
+      <div class="empty-state-icon">📊</div>
+      Add your first poll to see party standings
+    </div>
+  </div>
+
+  <!-- CHARTS GRID -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Constituency Vote Over Time</div>
+      <div class="chart-meta" id="constMetaLabel">No polls yet — add data using the button above</div>
+      <div class="chart-container">
+        <canvas id="constituencyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">List Vote Over Time</div>
+      <div class="chart-meta" id="listMetaLabel">No polls yet — add data using the button above</div>
+      <div class="chart-container">
+        <canvas id="listChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEAT PROJECTION -->
+  <div class="section-label">Seat Projection</div>
+  <div class="seat-chart-card">
+    <div class="seat-header">
+      <div>
+        <div class="chart-title">Scottish Parliament Seats (129 total)</div>
+        <div class="seat-total-label">65 seats required for majority · Projections from Ballot Box Scotland</div>
+      </div>
+    </div>
+
+    <div class="majority-line">
+      <div class="majority-marker"></div>
+      <div class="majority-tag">← Opposition · 65 seats majority →</div>
+      <div class="majority-marker" style="background:linear-gradient(to left, var(--border), transparent)"></div>
+    </div>
+
+    <div class="parliament-bar" id="parliamentBar">
+      <div style="flex:1;background:var(--bg3);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--text-dim);">Add polls to generate projection</span>
+      </div>
+    </div>
+
+    <div class="seats-grid" id="seatsGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- POLLS TABLE -->
+  <div class="section-label">All Polls — Raw Data</div>
+  <div class="polls-table-wrap">
+    <table class="polls-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Pollster</th>
+          <th>SNP C</th>
+          <th>LAB C</th>
+          <th>CON C</th>
+          <th>LIB C</th>
+          <th>GRN C</th>
+          <th>RFM C</th>
+          <th>SNP L</th>
+          <th>LAB L</th>
+          <th>CON L</th>
+          <th>LIB L</th>
+          <th>GRN L</th>
+          <th>RFM L</th>
+          <th>SNP Seats</th>
+          <th>LAB Seats</th>
+          <th>CON Seats</th>
+          <th>LIB Seats</th>
+          <th>GRN Seats</th>
+          <th>RFM Seats</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="pollsTableBody">
+        <tr>
+          <td colspan="21" style="text-align:center;color:var(--text-dim);padding:40px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;">
+            No polls added yet
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  <span class="footer-text">Data entered manually · Visualised locally · Last updated: <span id="lastUpdated">—</span></span>
+  <div class="footer-sources">
+    <a href="https://whatscotlandthinks.org/" target="_blank">What Scotland Thinks</a>
+    <a href="https://ballotbox.scot/scottish-parliament/polling-scottish-parliament/" target="_blank">Ballot Box Scotland</a>
+    <a href="https://scottishelections.ac.uk/scoop-monitor/" target="_blank">SCOOP</a>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title">Add Poll</div>
+    <div class="modal-sub">Enter figures from What Scotland Thinks or Ballot Box Scotland</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Pollster</label>
+        <input type="text" id="f_pollster" placeholder="e.g. YouGov" />
+      </div>
+      <div class="form-group">
+        <label>Fieldwork End Date</label>
+        <input type="date" id="f_date" />
+      </div>
+    </div>
+
+    <div class="form-section-label">Constituency Vote (%)</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>SNP</label>
+        <input type="number" id="f_snp_c" min="0" max="100" step="0.1" placeholder="e.g. 34" />
+      </div>
+      <div class="form-group">
+        <label>Labour</label>
+        <input type="number" id="f_lab_c" min="0" max="100" step="0.1" placeholder="e.g. 18" />
+      </div>
+      <div class="form-group">
+        <label>Conservative</label>
+        <input type="number" id="f_con_c" min="0" max="100" step="0.1" placeholder="e.g. 11" />
+      </div>
+      <div class="form-group">
+        <label>Lib Dem</label>
+        <input type="number" id="f_lib_c" min="0" max="100" step="0.1" placeholder="e.g. 10" />
+      </div>
+      <div class="form-group">
+        <label>Green</label>
+        <input type="number" id="f_grn_c" min="0" max="100" step="0.1" placeholder="e.g. 9" />
+      </div>
+      <div class="form-group">
+        <label>Reform UK</label>
+        <input type="number" id="f_rfm_c" min="0" max="100" step="0.1" placeholder="e.g. 19" />
+      </div>
+    </div>
+
+    <div class="form-section-label">List Vote (%)</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>SNP</label>
+        <input type="number" id="f_snp_l" min="0" max="100" step="0.1" placeholder="e.g. 29" />
+      </div>
+      <div class="form-group">
+        <label>Labour</label>
+        <input type="number" id="f_lab_l" min="0" max="100" step="0.1" placeholder="e.g. 19" />
+      </div>
+      <div class="form-group">
+        <label>Conservative</label>
+        <input type="number" id="f_con_l" min="0" max="100" step="0.1" placeholder="e.g. 12" />
+      </div>
+      <div class="form-group">
+        <label>Lib Dem</label>
+        <input type="number" id="f_lib_l" min="0" max="100" step="0.1" placeholder="e.g. 13" />
+      </div>
+      <div class="form-group">
+        <label>Green</label>
+        <input type="number" id="f_grn_l" min="0" max="100" step="0.1" placeholder="e.g. 9" />
+      </div>
+      <div class="form-group">
+        <label>Reform UK</label>
+        <input type="number" id="f_rfm_l" min="0" max="100" step="0.1" placeholder="e.g. 20" />
+      </div>
+    </div>
+
+    <div class="form-section-label">Seat Projection (from Ballot Box Scotland)</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>SNP Seats</label>
+        <input type="number" id="f_snp_s" min="0" max="129" placeholder="e.g. 55" />
+      </div>
+      <div class="form-group">
+        <label>Labour Seats</label>
+        <input type="number" id="f_lab_s" min="0" max="129" placeholder="e.g. 24" />
+      </div>
+      <div class="form-group">
+        <label>Conservative Seats</label>
+        <input type="number" id="f_con_s" min="0" max="129" placeholder="e.g. 14" />
+      </div>
+      <div class="form-group">
+        <label>Lib Dem Seats</label>
+        <input type="number" id="f_lib_s" min="0" max="129" placeholder="e.g. 12" />
+      </div>
+      <div class="form-group">
+        <label>Green Seats</label>
+        <input type="number" id="f_grn_s" min="0" max="129" placeholder="e.g. 12" />
+      </div>
+      <div class="form-group">
+        <label>Reform UK Seats</label>
+        <input type="number" id="f_rfm_s" min="0" max="129" placeholder="e.g. 12" />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="addPoll()">Add to Dashboard</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── PARTY CONFIG ──────────────────────────────────────────────
+const PARTIES = [
+  { key: 'snp', label: 'SNP',     color: '#FDF38E' },
+  { key: 'lab', label: 'Labour',  color: '#E4003B' },
+  { key: 'con', label: 'Con',     color: '#0087DC' },
+  { key: 'lib', label: 'Lib Dem', color: '#FAA61A' },
+  { key: 'grn', label: 'Green',   color: '#00B140' },
+  { key: 'rfm', label: 'Reform',  color: '#12B6CF' },
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+let polls = JSON.parse(localStorage.getItem('holyrood_polls') || '[]');
+
+// ── COUNTDOWN ─────────────────────────────────────────────────
+function updateCountdown() {
+  const election = new Date('2026-05-07');
+  const now = new Date();
+  const diff = Math.ceil((election - now) / (1000 * 60 * 60 * 24));
+  document.getElementById('daysLeft').textContent = diff > 0 ? diff : '0';
+}
+updateCountdown();
+
+// ── SAVE ──────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('holyrood_polls', JSON.stringify(polls));
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleString('en-GB');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  clearModal();
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+function clearModal() {
+  ['f_pollster','f_date','f_snp_c','f_lab_c','f_con_c','f_lib_c','f_grn_c','f_rfm_c',
+   'f_snp_l','f_lab_l','f_con_l','f_lib_l','f_grn_l','f_rfm_l',
+   'f_snp_s','f_lab_s','f_con_s','f_lib_s','f_grn_s','f_rfm_s'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function g(id) {
+  const v = document.getElementById(id).value;
+  return v === '' ? null : parseFloat(v);
+}
+
+function addPoll() {
+  const pollster = document.getElementById('f_pollster').value.trim();
+  const date = document.getElementById('f_date').value;
+  if (!pollster || !date) { alert('Please enter at least a pollster name and date.'); return; }
+
+  const poll = {
+    id: Date.now(),
+    date, pollster,
+    constituency: { snp: g('f_snp_c'), lab: g('f_lab_c'), con: g('f_con_c'), lib: g('f_lib_c'), grn: g('f_grn_c'), rfm: g('f_rfm_c') },
+    list:         { snp: g('f_snp_l'), lab: g('f_lab_l'), con: g('f_con_l'), lib: g('f_lib_l'), grn: g('f_grn_l'), rfm: g('f_rfm_l') },
+    seats:        { snp: g('f_snp_s'), lab: g('f_lab_s'), con: g('f_con_s'), lib: g('f_lib_s'), grn: g('f_grn_s'), rfm: g('f_rfm_s') },
+  };
+
+  polls.push(poll);
+  polls.sort((a, b) => a.date.localeCompare(b.date));
+  save();
+  render();
+  closeModal();
+}
+
+function deletePoll(id) {
+  polls = polls.filter(p => p.id !== id);
+  save();
+  render();
+}
+
+// ── CHARTS ────────────────────────────────────────────────────
+let constChart, listChart;
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        color: '#7a8aaa',
+        font: { family: "'IBM Plex Mono'", size: 10 },
+        boxWidth: 10, boxHeight: 10,
+        padding: 16,
+      }
+    },
+    tooltip: {
+      backgroundColor: '#1a2235',
+      borderColor: '#2a3450',
+      borderWidth: 1,
+      titleColor: '#e8eaf2',
+      bodyColor: '#7a8aaa',
+      titleFont: { family: "'IBM Plex Mono'", size: 11 },
+      bodyFont: { family: "'IBM Plex Mono'", size: 10 },
+      callbacks: {
+        label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y}%`
+      }
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: 'rgba(42,52,80,0.4)' },
+      ticks: { color: '#4a5878', font: { family: "'IBM Plex Mono'", size: 10 } },
+    },
+    y: {
+      min: 0, max: 55,
+      grid: { color: 'rgba(42,52,80,0.4)' },
+      ticks: {
+        color: '#4a5878',
+        font: { family: "'IBM Plex Mono'", size: 10 },
+        callback: v => v + '%'
+      }
+    }
+  },
+  elements: {
+    point: { radius: 4, hoverRadius: 6 },
+    line: { tension: 0.3, borderWidth: 2 }
+  }
+};
+
+function buildDatasets(pollArray, voteKey) {
+  return PARTIES.map(p => ({
+    label: p.label,
+    data: pollArray.map(poll => poll[voteKey][p.key]),
+    borderColor: p.color,
+    backgroundColor: p.color + '22',
+    pointBackgroundColor: p.color,
+    fill: false,
+  }));
+}
+
+function initCharts() {
+  const ctxC = document.getElementById('constituencyChart').getContext('2d');
+  const ctxL = document.getElementById('listChart').getContext('2d');
+
+  constChart = new Chart(ctxC, {
+    type: 'line',
+    data: { labels: [], datasets: buildDatasets([], 'constituency') },
+    options: { ...CHART_DEFAULTS }
+  });
+
+  listChart = new Chart(ctxL, {
+    type: 'line',
+    data: { labels: [], datasets: buildDatasets([], 'list') },
+    options: { ...CHART_DEFAULTS }
+  });
+}
+
+function updateCharts() {
+  if (!polls.length) return;
+  const labels = polls.map(p => {
+    const d = new Date(p.date);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+  });
+
+  [constChart, listChart].forEach((chart, i) => {
+    const key = i === 0 ? 'constituency' : 'list';
+    chart.data.labels = labels;
+    chart.data.datasets = buildDatasets(polls, key);
+    chart.update('active');
+  });
+
+  const meta = `${polls.length} poll${polls.length > 1 ? 's' : ''} · Sources: What Scotland Thinks, Ballot Box Scotland`;
+  document.getElementById('constMetaLabel').textContent = meta;
+  document.getElementById('listMetaLabel').textContent = meta;
+}
+
+// ── LATEST STRIP ──────────────────────────────────────────────
+function renderLatestStrip() {
+  const strip = document.getElementById('latestStrip');
+  if (!polls.length) {
+    strip.innerHTML = `<div class="empty-state" style="grid-column:1/-1;padding:30px;">
+      <div class="empty-state-icon">📊</div>Add your first poll to see party standings
+    </div>`;
+    return;
+  }
+
+  const latest = polls[polls.length - 1];
+  const prev = polls.length > 1 ? polls[polls.length - 2] : null;
+
+  strip.innerHTML = PARTIES.map(p => {
+    const val = latest.constituency[p.key];
+    const prevVal = prev ? prev.constituency[p.key] : null;
+    let changeHtml = '';
+    if (val !== null && prevVal !== null) {
+      const diff = (val - prevVal).toFixed(1);
+      const cls = diff > 0 ? 'change-up' : diff < 0 ? 'change-down' : '';
+      const sym = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
+      changeHtml = `<div class="party-chip-change ${cls}">${sym} ${Math.abs(diff)}%</div>`;
+    }
+    return `
+      <div class="party-chip">
+        <div class="party-dot" style="background:${p.color}"></div>
+        <div class="party-chip-name">${p.label}</div>
+        <div class="party-chip-pct" style="color:${p.color}">${val !== null ? val + '%' : '—'}</div>
+        ${changeHtml}
+      </div>`;
+  }).join('');
+}
+
+// ── SEAT PROJECTION ───────────────────────────────────────────
+function renderSeats() {
+  const latest = polls.length ? polls[polls.length - 1] : null;
+  const bar = document.getElementById('parliamentBar');
+  const grid = document.getElementById('seatsGrid');
+
+  if (!latest || !Object.values(latest.seats).some(v => v !== null)) {
+    bar.innerHTML = `<div style="flex:1;background:var(--bg3);display:flex;align-items:center;justify-content:center;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--text-dim);">Add seat projections to generate this chart</span>
+    </div>`;
+    grid.innerHTML = '';
+    return;
+  }
+
+  const total = PARTIES.reduce((s, p) => s + (latest.seats[p.key] || 0), 0) || 129;
+
+  bar.innerHTML = PARTIES.map(p => {
+    const seats = latest.seats[p.key] || 0;
+    const pct = (seats / total * 100).toFixed(1);
+    return `<div class="parliament-segment" style="width:${pct}%;background:${p.color};"
+      data-label="${p.label}: ${seats} seats"></div>`;
+  }).join('');
+
+  grid.innerHTML = PARTIES.map(p => {
+    const seats = latest.seats[p.key];
+    return `<div class="seat-party">
+      <div class="party-dot" style="background:${p.color};margin:0 auto 6px;"></div>
+      <div class="seat-party-name">${p.label}</div>
+      <div class="seat-party-num" style="color:${p.color}">${seats !== null ? seats : '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── POLLS TABLE ───────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('pollsTableBody');
+  if (!polls.length) {
+    tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:var(--text-dim);padding:40px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;">No polls added yet</td></tr>`;
+    return;
+  }
+  const fmt = v => v !== null ? v + (Number.isInteger(v) ? '' : '') : '—';
+  tbody.innerHTML = [...polls].reverse().map(p => `
+    <tr>
+      <td>${new Date(p.date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'2-digit' })}</td>
+      <td class="pollster">${p.pollster}</td>
+      <td style="color:var(--snp)">${fmt(p.constituency.snp)}%</td>
+      <td style="color:var(--lab)">${fmt(p.constituency.lab)}%</td>
+      <td style="color:var(--con)">${fmt(p.constituency.con)}%</td>
+      <td style="color:var(--lib)">${fmt(p.constituency.lib)}%</td>
+      <td style="color:var(--grn)">${fmt(p.constituency.grn)}%</td>
+      <td style="color:var(--rfm)">${fmt(p.constituency.rfm)}%</td>
+      <td style="color:var(--snp)">${fmt(p.list.snp)}%</td>
+      <td style="color:var(--lab)">${fmt(p.list.lab)}%</td>
+      <td style="color:var(--con)">${fmt(p.list.con)}%</td>
+      <td style="color:var(--lib)">${fmt(p.list.lib)}%</td>
+      <td style="color:var(--grn)">${fmt(p.list.grn)}%</td>
+      <td style="color:var(--rfm)">${fmt(p.list.rfm)}%</td>
+      <td style="color:var(--snp)">${fmt(p.seats.snp)}</td>
+      <td style="color:var(--lab)">${fmt(p.seats.lab)}</td>
+      <td style="color:var(--con)">${fmt(p.seats.con)}</td>
+      <td style="color:var(--lib)">${fmt(p.seats.lib)}</td>
+      <td style="color:var(--grn)">${fmt(p.seats.grn)}</td>
+      <td style="color:var(--rfm)">${fmt(p.seats.rfm)}</td>
+      <td><button class="delete-row" onclick="deletePoll(${p.id})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────
+function render() {
+  renderLatestStrip();
+  updateCharts();
+  renderSeats();
+  renderTable();
+}
+
+// ── SEED DATA (most recent polls so it opens with content) ────
+function seedIfEmpty() {
+  if (polls.length > 0) return;
+  polls = [
+    {
+      id: 1, date: '2025-09-16', pollster: 'Survation',
+      constituency: { snp: 37, lab: 20, con: 11, lib: 9,  grn: 5,  rfm: 18 },
+      list:         { snp: 28, lab: 20, con: 12, lib: 10, grn: 10, rfm: 18 },
+      seats:        { snp: 57, lab: 25, con: 13, lib: 10, grn: 12, rfm: 12 }
+    },
+    {
+      id: 2, date: '2026-01-29', pollster: 'YouGov',
+      constituency: { snp: 34, lab: 18, con: 10, lib: 10, grn: 9,  rfm: 20 },
+      list:         { snp: 29, lab: 19, con: 11, lib: 9,  grn: 12, rfm: 20 },
+      seats:        { snp: 55, lab: 23, con: 12, lib: 11, grn: 14, rfm: 14 }
+    },
+    {
+      id: 3, date: '2026-02-03', pollster: 'More in Common',
+      constituency: { snp: 35, lab: 18, con: 11, lib: 10, grn: 5,  rfm: 19 },
+      list:         { snp: 25, lab: 19, con: 12, lib: 13, grn: 9,  rfm: 20 },
+      seats:        { snp: 54, lab: 24, con: 13, lib: 13, grn: 12, rfm: 13 }
+    },
+  ];
+  save();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+initCharts();
+seedIfEmpty();
+render();
+
+// Update countdown daily
+setInterval(updateCountdown, 60 * 60 * 1000);
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 
 ## What is this?
 
-A PhD student-led initiative using the upcoming Scottish Parliament (Holyrood) election as a hands-on opportunity to teach ourselves and undergraduates about quantitative methods and the electoral process.
+A PhD student-led initiative using the upcoming Scottish Parliament (Holyrood) election as a hands-on opportunity to teach ourselves and undergraduates about quantitative methods and the electoral process. The aim is to cover electoral norms, polling behaviour, quantitative methods, and then write up a small blogpost with our undergraduates after the Holyrood elections in E-IR! 
 
 ## Data Sources
 

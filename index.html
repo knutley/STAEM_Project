@@ -16,13 +16,13 @@
     --text-muted: #7a8aaa;
     --text-dim: #4a5878;
     --accent: #f0c040;
-    --snp: #FDF38E;
-    --lab: #E4003B;
-    --con: #0087DC;
-    --lib: #FAA61A;
-    --grn: #00B140;
-    --rfm: #12B6CF;
+    --con:  #0087DC;
+    --lab:  #E4003B;
+    --lib:  #FAA61A;
+    --snp:  #FDF38E;
     --alba: #005EB8;
+    --rfm:  #12B6CF;
+    --grn:  #00B140;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -121,8 +121,9 @@
   .filter-btn.active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
   .filter-btn:hover:not(.active) { border-color: var(--text-muted); }
 
+  /* 7 columns for 7 parties shown in the strip */
   .latest-strip {
-    display: grid; grid-template-columns: repeat(6, 1fr);
+    display: grid; grid-template-columns: repeat(7, 1fr);
     gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 10px;
   }
   .strip-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--text-dim); margin-bottom: 32px; text-align: right; }
@@ -186,7 +187,7 @@
 
   @media (max-width: 900px) {
     .charts-grid, .pollster-grid, .incumbent-summary { grid-template-columns: 1fr; }
-    .latest-strip { grid-template-columns: repeat(3, 1fr); }
+    .latest-strip { grid-template-columns: repeat(4, 1fr); }
     header, main, footer { padding-left: 20px; padding-right: 20px; }
   }
 </style>
@@ -316,10 +317,14 @@
       <table class="polls-table">
         <thead><tr>
           <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
-          <th style="color:var(--snp)">SNP</th><th style="color:var(--con)">Con</th>
-          <th style="color:var(--lab)">Lab</th><th style="color:var(--lib)">Lib Dem</th>
-          <th style="color:var(--grn)">Green</th><th style="color:var(--alba)">Alba</th>
-          <th style="color:var(--rfm)">Reform</th><th>Others</th>
+          <th style="color:var(--con)">Con</th>
+          <th style="color:var(--lab)">Labour</th>
+          <th style="color:var(--lib)">Lib Dem</th>
+          <th style="color:var(--snp)">SNP</th>
+          <th style="color:var(--alba)">Alba</th>
+          <th style="color:var(--rfm)">Reform</th>
+          <th style="color:var(--grn)">Green</th>
+          <th>Others</th>
         </tr></thead>
         <tbody id="constTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
       </table>
@@ -330,10 +335,14 @@
       <table class="polls-table">
         <thead><tr>
           <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
-          <th style="color:var(--snp)">SNP</th><th style="color:var(--con)">Con</th>
-          <th style="color:var(--lab)">Lab</th><th style="color:var(--lib)">Lib Dem</th>
-          <th style="color:var(--grn)">Green</th><th style="color:var(--alba)">Alba</th>
-          <th style="color:var(--rfm)">Reform</th><th>Others</th>
+          <th style="color:var(--con)">Con</th>
+          <th style="color:var(--lab)">Labour</th>
+          <th style="color:var(--lib)">Lib Dem</th>
+          <th style="color:var(--snp)">SNP</th>
+          <th style="color:var(--alba)">Alba</th>
+          <th style="color:var(--rfm)">Reform</th>
+          <th style="color:var(--grn)">Green</th>
+          <th>Others</th>
         </tr></thead>
         <tbody id="listTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
       </table>
@@ -367,13 +376,19 @@ const SOURCES = {
   incumbency: { dotId: 'dot-inc', stId: 'st-inc', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv' },
 };
 
+// ── PARTY ORDER: Con, Labour, Lib Dem, SNP, Alba, Reform, Green ──
+// This order is used everywhere: strips, charts, pollster cards, and tables.
+// It must match the column order in the Google Sheets:
+//   col 4 = Con, col 5 = Labour, col 6 = Lib Dem, col 7 = SNP,
+//   col 8 = Alba, col 9 = Reform, col 10 = Green, col 11 = Others
 const PARTIES = [
-  { key: 'snp', label: 'SNP',     color: '#FDF38E' },
-  { key: 'con', label: 'Con',     color: '#0087DC' },
-  { key: 'lab', label: 'Labour',  color: '#E4003B' },
-  { key: 'lib', label: 'Lib Dem', color: '#FAA61A' },
-  { key: 'grn', label: 'Green',   color: '#00B140' },
-  { key: 'rfm', label: 'Reform',  color: '#12B6CF' },
+  { key: 'con',    label: 'Con',     color: '#0087DC' },
+  { key: 'lab',    label: 'Labour',  color: '#E4003B' },
+  { key: 'lib',    label: 'Lib Dem', color: '#FAA61A' },
+  { key: 'snp',    label: 'SNP',     color: '#FDF38E' },
+  { key: 'alba',   label: 'Alba',    color: '#005EB8' },
+  { key: 'rfm',    label: 'Reform',  color: '#12B6CF' },
+  { key: 'grn',    label: 'Green',   color: '#00B140' },
 ];
 
 const POLLSTER_COLORS = { Survation: '#a78bfa', Norstat: '#fb923c', Ipsos: '#38bdf8' };
@@ -419,15 +434,24 @@ function pct(v) {
   return parseFloat(String(v).replace('%', '')) || null;
 }
 
+// ── ROW PARSER ────────────────────────────────────────────────
+// Google Sheet column order:
+//   0=Date, 1=Pollster, 2=Client, 3=Sample,
+//   4=Con, 5=Labour, 6=LibDem, 7=SNP, 8=Alba, 9=Reform, 10=Green, 11=Others
 function parsePollRow(row, sourceName) {
   return {
     date:    row[0] || '',
     pollster: row[1] || sourceName,
     client:  row[2] || '',
     sample:  row[3] || '',
-    snp:  pct(row[4]), con:  pct(row[5]), lab:  pct(row[6]),
-    lib:  pct(row[7]), grn:  pct(row[8]), alba: pct(row[9]),
-    rfm:  pct(row[10]), others: pct(row[11]),
+    con:     pct(row[4]),
+    lab:     pct(row[5]),
+    lib:     pct(row[6]),
+    snp:     pct(row[7]),
+    alba:    pct(row[8]),
+    rfm:     pct(row[9]),
+    grn:     pct(row[10]),
+    others:  pct(row[11]),
     _source: sourceName,
   };
 }
@@ -516,7 +540,6 @@ async function loadAll() {
 }
 
 // ── AVERAGE ───────────────────────────────────────────────────
-// Takes the most recent poll from each pollster and averages them
 function computeAverage(polls) {
   const byPollster = {};
   polls.forEach(p => {
@@ -656,13 +679,13 @@ function renderPollsTable(polls, tbodyId) {
       <td class="col-pollster"><span class="pollster-tag ${tagCls(p._source)}">${p._source}</span></td>
       <td style="font-style:italic;color:var(--text-muted)">${p.client}</td>
       <td>${p.sample}</td>
-      <td style="color:var(--snp)">${fmt(p.snp)}</td>
       <td style="color:var(--con)">${fmt(p.con)}</td>
       <td style="color:var(--lab)">${fmt(p.lab)}</td>
       <td style="color:var(--lib)">${fmt(p.lib)}</td>
-      <td style="color:var(--grn)">${fmt(p.grn)}</td>
+      <td style="color:var(--snp)">${fmt(p.snp)}</td>
       <td style="color:var(--alba)">${fmt(p.alba)}</td>
       <td style="color:var(--rfm)">${fmt(p.rfm)}</td>
+      <td style="color:var(--grn)">${fmt(p.grn)}</td>
       <td>${fmt(p.others)}</td>
     </tr>`).join('');
 }
@@ -676,7 +699,11 @@ function renderRawTables() {
 function getPartyColor(name) {
   if (!name) return '#7a8aaa';
   const lc = name.toLowerCase();
-  const map = { snp:'#FDF38E', labour:'#E4003B', conservative:'#0087DC', 'lib dem':'#FAA61A', liberal:'#FAA61A', green:'#00B140', alba:'#005EB8', reform:'#12B6CF' };
+  const map = {
+    conservative: '#0087DC', labour: '#E4003B', 'lib dem': '#FAA61A',
+    liberal: '#FAA61A', snp: '#FDF38E', alba: '#005EB8',
+    reform: '#12B6CF', green: '#00B140'
+  };
   for (const [k,v] of Object.entries(map)) if (lc.includes(k)) return v;
   return '#7a8aaa';
 }

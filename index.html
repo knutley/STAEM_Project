@@ -441,18 +441,18 @@ function pct(v) {
 //   14=Would not vote, 15=Don't know, 16=Prefer not to say, 17=URL
 function parsePollRow(row, sourceName) {
   return {
-    date:    row[0] || '',
-    pollster: row[1] || sourceName,
-    client:  row[2] || '',
-    sample:  row[3] || '',
-    con:     pct(row[6]),
-    lab:     pct(row[7]),
-    lib:     pct(row[8]),
-    snp:     pct(row[9]),
-    alba:    pct(row[10]),
-    rfm:     pct(row[11]),
-    grn:     pct(row[12]),
-    others:  pct(row[13]),
+    date:    row[2] || '',
+    pollster: row[4] || sourceName,
+    client:  row[5] || '',
+    sample:  row[6] || '',
+    con:     pct(row[11]),
+    lab:     pct(row[12]),
+    lib:     pct(row[13]),
+    snp:     pct(row[14]),
+    alba:    pct(row[15]),
+    rfm:     pct(row[16]),
+    grn:     pct(row[17]),
+    others:  pct(row[18]),
     _source: sourceName,
   };
 }

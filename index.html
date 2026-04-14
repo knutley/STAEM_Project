@@ -436,12 +436,12 @@ function pct(v) {
 
 // ── ROW PARSER ────────────────────────────────────────────────
 // Google Sheet column order:
-//   0=Date, 1=Pollster, 2=Client, 3=Sample Size, 4=Relevant Question Number, 5=Question,
-//   6=Con, 7=Labour, 8=LibDem, 9=SNP, 10=Alba, 11=Reform, 12=Green, 13=Others,
-//   14=Would not vote, 15=Don't know, 16=Prefer not to say, 17=URL
+//   3=Date, 4=Pollster, 5=Client, 6=Sample Size, 9=Relevant Question Number, 10=Question,
+//   11=Con, 12=Labour, 13=LibDem, 14=SNP, 15=Alba, 16=Reform, 17=Green, 18=Others,
+//   19=Would not vote, 20=Don't know, 21=Prefer not to say, 22=URL
 function parsePollRow(row, sourceName) {
   return {
-    date:    row[2] || '',
+    date:    row[3] || '',
     pollster: row[4] || sourceName,
     client:  row[5] || '',
     sample:  row[6] || '',

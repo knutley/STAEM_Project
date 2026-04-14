@@ -42,3 +42,24 @@
 
 # 2. Open Seat Adjustment 
 # ___________________________________________________________
+
+# 3. Ministerial Portfolio Adjustment
+# ___________________________________________________________
+
+# 4. Length of Service Adjustment
+# ___________________________________________________________
+
+# 5. Local Council Results Adjustment
+# ___________________________________________________________
+
+# 6. Composite Risk Score and Categorisation 
+# ___________________________________________________________
+
+#    Purpose: Combine all swing and adjustments into a single actionable risk tier.
+#
+#    Final score:
+#      final_swing_margin = swing_margin
+#                         + open_seat
+#                         - ministerial_bonus
+#                         - length_of_service_bonus
+#                         - local_modifier

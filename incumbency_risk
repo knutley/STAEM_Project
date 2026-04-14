@@ -1,0 +1,44 @@
+# Author: Katie Nutley 
+# Date: 14 April 2026
+# Title: Incumbency at Risk Measure 
+
+# Presently, we have a Google sheet that documents: Constituency, Region, 2021 Winner (Notional), 2021 Winner Party (Notional),	2021 Runner Up (Notional),
+# 2021 Runner Up Party (Notional), Party	2021 Vote Share (%), 2021 Majority Size (%), Incumbent MSP	Incumbent Standing?, Incumbent Party, Retirement Risk (Y/N), 
+# Candidate 2026, Candidate Party, Source, and Notes. 
+
+# This should be supplemented with: MRP estimates (forthcoming), ministerial portfolio (Y/N), length of time spent in public office (0-2 years, 3-7 years, 7+ years), 
+# local council results. 
+
+# Model Architecture
+#___________________________________________________________
+
+# 1. Baseline Swing 
+# ___________________________________________________________
+#    Purpose: Estimate the vote share transfer needed to unseat the incumbent,
+#             and compare this against the expected national/regional swing.
+#
+#    Method:
+#      a. Calculate the swing required to overturn the 2021 (notional) majority:
+#            required_swing = majority_size_pct / 2
+#         This is the classic Butler swing formula — the uniform swing at which
+#         the seat changes hands, assuming votes transfer symmetrically.
+#
+#      b. Establish an expected swing per party-pair (e.g. SNP→Lab, Con→SNP)
+#         derived from:
+#            i.  Current national polling averages (averaging last 4 published polls)
+#            ii. MRP constituency-level estimates (when available — supersedes i.)
+#         This gives expected_swing[incumbent_party][challenger_party].
+#
+#      c. Calculate swing margin:
+#            swing_margin = expected_swing - required_swing
+#         A positive swing_margin means the seat is, on uniform swing, at risk.
+#         A negative swing_margin means the incumbent survives on current polling.
+#
+#    Limitations:
+#      Swing is rarely uniform. Treat swing_margin as a starting position only —
+#      subsequent steps apply modifiers to adjust for seat-level deviations.
+#
+#    Output: swing_margin (continuous, %; positive = at risk)
+
+# 2. Open Seat Adjustment 
+# ___________________________________________________________

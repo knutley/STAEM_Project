@@ -32,13 +32,17 @@
   .status-bar { display: flex; gap: 16px; margin-bottom: 32px; padding: 14px 20px; background: var(--bg2); border: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 0.63rem; color: var(--text-muted); flex-wrap: wrap; align-items: center; }
   .status-item { display: flex; align-items: center; gap: 7px; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .status-dot.ok { background: #4ade80; } .status-dot.loading { background: var(--accent); animation: pulse 1s infinite; } .status-dot.error { background: #f87171; } .status-dot.empty { background: var(--text-dim); }
+  .status-dot.ok { background: #4ade80; }
+  .status-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
+  .status-dot.error { background: #f87171; }
+  .status-dot.empty { background: var(--text-dim); }
   @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
   .tab-row { display: flex; gap: 2px; margin-bottom: 28px; }
   .tab-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 24px; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
   .tab-btn.active { background: var(--accent); color: #0a0e1a; border-color: var(--accent); font-weight: 500; }
   .tab-btn:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
-  .tab-panel { display: none; } .tab-panel.active { display: block; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
   .filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
   .filter-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-right: 4px; }
   .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
@@ -75,8 +79,8 @@
   .polls-table td.col-pollster { color: var(--text); font-weight: 500; }
   .pollster-tag { display: inline-block; padding: 1px 7px; font-size: 0.58rem; letter-spacing: 0.08em; border: 1px solid var(--border); }
   .pollster-tag.survation { border-color: #a78bfa44; color: #a78bfa; }
-  .pollster-tag.norstat   { border-color: #fb923c44; color: #fb923c; }
-  .pollster-tag.ipsos     { border-color: #38bdf844; color: #38bdf8; }
+  .pollster-tag.norstat { border-color: #fb923c44; color: #fb923c; }
+  .pollster-tag.ipsos { border-color: #38bdf844; color: #38bdf8; }
   .incumbent-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
   .summary-card { background: var(--bg2); border: 1px solid var(--border); padding: 20px 24px; }
   .summary-card-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
@@ -87,7 +91,9 @@
   .incumbency-table td { padding: 10px 12px; border-bottom: 1px solid rgba(42,52,80,0.5); color: var(--text-muted); }
   .incumbency-table tr:hover td { background: var(--bg3); }
   .incumbency-table td.constituency-name { color: var(--text); font-weight: 500; }
-  .standing-yes { color: #4ade80; font-size: 0.65rem; } .standing-no { color: #f87171; font-size: 0.65rem; } .standing-unknown { color: var(--text-dim); font-size: 0.65rem; }
+  .standing-yes { color: #4ade80; font-size: 0.65rem; }
+  .standing-no { color: #f87171; font-size: 0.65rem; }
+  .standing-unknown { color: var(--text-dim); font-size: 0.65rem; }
   .winner-badge { display: inline-block; padding: 2px 8px; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
   .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; }
   footer { border-top: 1px solid var(--border); padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; }
@@ -118,6 +124,7 @@
 </header>
 
 <main>
+
   <div class="status-bar" id="statusBar">
     <div class="status-item"><div class="status-dot loading" id="dot-cs"></div><span id="st-cs">Constituency: Survation…</span></div>
     <div class="status-item"><div class="status-dot loading" id="dot-cn"></div><span id="st-cn">Constituency: Norstat…</span></div>
@@ -136,12 +143,17 @@
     <button class="tab-btn" onclick="switchTab('rawdata', this)">Raw Data</button>
   </div>
 
+  <!-- POLLING TAB -->
   <div class="tab-panel active" id="tab-polling">
     <div class="section-label">Latest Constituency Vote — Polling Average</div>
-    <div class="latest-strip" id="latestConstStrip"><div class="empty-state" style="grid-column:1/-1;padding:28px;">Loading…</div></div>
+    <div class="latest-strip" id="latestConstStrip">
+      <div class="empty-state" style="grid-column:1/-1;padding:28px;">Loading…</div>
+    </div>
     <div class="strip-meta" id="constAvgMeta">—</div>
     <div class="section-label">Latest Regional List Vote — Polling Average</div>
-    <div class="latest-strip" id="latestListStrip"><div class="empty-state" style="grid-column:1/-1;padding:28px;">Loading…</div></div>
+    <div class="latest-strip" id="latestListStrip">
+      <div class="empty-state" style="grid-column:1/-1;padding:28px;">Loading…</div>
+    </div>
     <div class="strip-meta" id="listAvgMeta">—</div>
     <div class="charts-grid">
       <div class="chart-card">
@@ -157,18 +169,33 @@
     </div>
   </div>
 
+  <!-- BY POLLSTER TAB -->
   <div class="tab-panel" id="tab-compare">
     <div class="section-label">Constituency Vote — Latest Reading by Pollster</div>
-    <div class="pollster-grid" id="constPollsterCards"><div class="empty-state" style="grid-column:1/-1">Loading…</div></div>
+    <div class="pollster-grid" id="constPollsterCards">
+      <div class="empty-state" style="grid-column:1/-1">Loading…</div>
+    </div>
     <div class="section-label">Regional List Vote — Latest Reading by Pollster</div>
-    <div class="pollster-grid" id="listPollsterCards"><div class="empty-state" style="grid-column:1/-1">Loading…</div></div>
+    <div class="pollster-grid" id="listPollsterCards">
+      <div class="empty-state" style="grid-column:1/-1">Loading…</div>
+    </div>
   </div>
 
+  <!-- INCUMBENCY TAB -->
   <div class="tab-panel" id="tab-incumbency">
     <div class="incumbent-summary">
-      <div class="summary-card"><div class="summary-card-label">Standing Again</div><div class="summary-card-num" id="inc-yes" style="color:#4ade80">—</div></div>
-      <div class="summary-card"><div class="summary-card-label">Not Standing</div><div class="summary-card-num" id="inc-no" style="color:#f87171">—</div></div>
-      <div class="summary-card"><div class="summary-card-label">Unknown / TBC</div><div class="summary-card-num" id="inc-unknown" style="color:var(--text-dim)">—</div></div>
+      <div class="summary-card">
+        <div class="summary-card-label">Standing Again</div>
+        <div class="summary-card-num" id="inc-yes" style="color:#4ade80">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Not Standing</div>
+        <div class="summary-card-num" id="inc-no" style="color:#f87171">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Unknown / TBC</div>
+        <div class="summary-card-num" id="inc-unknown" style="color:var(--text-dim)">—</div>
+      </div>
     </div>
     <div class="filter-row" id="regionFilters">
       <span class="filter-label">Region:</span>
@@ -176,12 +203,26 @@
     </div>
     <div class="incumbency-table-wrap">
       <table class="incumbency-table">
-        <thead><tr><th>Constituency</th><th>Region</th><th>2021 Winner (notional)</th><th>2021 Vote %</th><th>Incumbent MSP</th><th>Standing?</th><th>2026 Candidate</th><th>Notes</th></tr></thead>
-        <tbody id="incumbencyTableBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Constituency</th>
+            <th>Region</th>
+            <th>2021 Winner (notional)</th>
+            <th>2021 Vote %</th>
+            <th>Incumbent MSP</th>
+            <th>Standing?</th>
+            <th>2026 Candidate</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="incumbencyTableBody">
+          <tr><td colspan="8" class="empty-state">Loading…</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 
+  <!-- RAW DATA TAB -->
   <div class="tab-panel" id="tab-rawdata">
     <div class="filter-row" id="pollsterFilterRow">
       <span class="filter-label">Pollster:</span>
@@ -193,18 +234,47 @@
     <div class="section-label">Constituency Vote — All Polls</div>
     <div class="polls-table-wrap">
       <table class="polls-table">
-        <thead><tr><th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th><th style="color:var(--con)">Con</th><th style="color:var(--lab)">Labour</th><th style="color:var(--lib)">Lib Dem</th><th style="color:var(--snp)">SNP</th><th style="color:var(--alba)">Alba</th><th style="color:var(--rfm)">Reform</th><th style="color:var(--grn)">Green</th><th>Others</th></tr></thead>
-        <tbody id="constTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
+            <th style="color:var(--con)">Con</th>
+            <th style="color:var(--lab)">Labour</th>
+            <th style="color:var(--lib)">Lib Dem</th>
+            <th style="color:var(--snp)">SNP</th>
+            <th style="color:var(--alba)">Alba</th>
+            <th style="color:var(--rfm)">Reform</th>
+            <th style="color:var(--grn)">Green</th>
+            <th>Others</th>
+          </tr>
+        </thead>
+        <tbody id="constTableBody">
+          <tr><td colspan="12" class="empty-state">Loading…</td></tr>
+        </tbody>
       </table>
     </div>
     <div class="section-label">Regional List Vote — All Polls</div>
     <div class="polls-table-wrap">
       <table class="polls-table">
-        <thead><tr><th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th><th style="color:var(--con)">Con</th><th style="color:var(--lab)">Labour</th><th style="color:var(--lib)">Lib Dem</th><th style="color:var(--snp)">SNP</th><th style="color:var(--alba)">Alba</th><th style="color:var(--rfm)">Reform</th><th style="color:var(--grn)">Green</th><th>Others</th></tr></thead>
-        <tbody id="listTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
+            <th style="color:var(--con)">Con</th>
+            <th style="color:var(--lab)">Labour</th>
+            <th style="color:var(--lib)">Lib Dem</th>
+            <th style="color:var(--snp)">SNP</th>
+            <th style="color:var(--alba)">Alba</th>
+            <th style="color:var(--rfm)">Reform</th>
+            <th style="color:var(--grn)">Green</th>
+            <th>Others</th>
+          </tr>
+        </thead>
+        <tbody id="listTableBody">
+          <tr><td colspan="12" class="empty-state">Loading…</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
+
 </main>
 
 <footer>
@@ -217,24 +287,41 @@
 </footer>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────
+
+// =============================================================================
+// CONFIG
 // Sheet column layout (0-based):
 //   0=Poll ID, 1=Date start, 2=Date end, 3=Pollster, 4=Client,
 //   5=Sample Size, 6=Likely Voters Only (Y/N), 7=Undecideds Excluded (Y/N),
 //   8=Question Number, 9=Question Text,
 //   10=Con, 11=Labour, 12=Lib Dem, 13=SNP, 14=Alba, 15=Reform,
 //   16=Green, 17=Other, 18=Would not vote, 19=Don't know, 20=Prefer not to say, 21=URL
+//
+// filterUndecideds: true  → only keep rows where col 7 = 'Y' (Survation has sub-questions)
+// filterUndecideds: false → keep all rows regardless (Norstat/Ipsos always report headline)
+// =============================================================================
+
 const SOURCES = {
   constituency: [
-    { name: 'Survation', dotId: 'dot-cs', stId: 'st-cs', colDate: 2, skipRows: 1, filterUndecideds: true,  url: '...' },
-    { name: 'Norstat',   dotId: 'dot-cn', stId: 'st-cn', colDate: 2, skipRows: 1, filterUndecideds: false, url: '...' },
-    { name: 'Ipsos',     dotId: 'dot-ci', stId: 'st-ci', colDate: 2, skipRows: 1, filterUndecideds: false, url: '...' },
+    { name: 'Survation', dotId: 'dot-cs', stId: 'st-cs', colDate: 2, skipRows: 1, filterUndecideds: true,  url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRVHoDYDQBczBB68faWVZ6fGRNqPSjlJj9-yTKLzJc6h7P1OT6HQiFvz8aXVSG-JH9fZrPoq3X1Bw1K/pub?output=csv' },
+    { name: 'Norstat',   dotId: 'dot-cn', stId: 'st-cn', colDate: 2, skipRows: 1, filterUndecideds: false, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvwlOJGWbsgeU-1El-ruiXk0bo6_6Cv231HFmABtu7y1yukxmI8lrFDTveP3XSUXy6lfZi-RQ5_mKb/pub?output=csv' },
+    { name: 'Ipsos',     dotId: 'dot-ci', stId: 'st-ci', colDate: 2, skipRows: 1, filterUndecideds: false, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSkkfZ99xen3Z3FVOwVnxoqY2JZhxkEzejwagwS4p1n1f8awbC453uv5yb-ydAsagXz108FC-efiuQ_/pub?output=csv' },
   ],
   list: [
-    { name: 'Survation', dotId: 'dot-ls', stId: 'st-ls', colDate: 2, skipRows: 1, filterUndecideds: true,  url: '...' },
-    { name: 'Norstat',   dotId: 'dot-ln', stId: 'st-ln', colDate: 2, skipRows: 1, filterUndecideds: false, url: '...' },
-    { name: 'Ipsos',     dotId: 'dot-li', stId: 'st-li', colDate: 2, skipRows: 1, filterUndecideds: false, url: '...' },
+    { name: 'Survation', dotId: 'dot-ls', stId: 'st-ls', colDate: 2, skipRows: 1, filterUndecideds: true,  url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7RAJi3HPG0Eu49vOIf8yBR-v2vue3lUkc-iCmat81k3fNP4SOL3gixDwRRc_bKTxQ_SOmS6qVNwfY/pub?output=csv' },
+    { name: 'Norstat',   dotId: 'dot-ln', stId: 'st-ln', colDate: 2, skipRows: 1, filterUndecideds: false, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQujNr-IGnS63Sp1zn-lGV-xlO8hfZRxsKHC1udfblPWpfliy7gYFNSt-sTB5dhlAlwodu0ng8Ex9R9/pub?output=csv' },
+    { name: 'Ipsos',     dotId: 'dot-li', stId: 'st-li', colDate: 2, skipRows: 1, filterUndecideds: false, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRKZ0skhiQDkOWJplehISh4YktsynvLoSHYvqizkckRD2E8_AzXE-x0cO_WbhZ0HlmMzRgVHCaZJUD/pub?output=csv' },
   ],
+  incumbency: {
+    dotId: 'dot-inc',
+    stId:  'st-inc',
+    url:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv',
+  },
+}; // end SOURCES
+
+// =============================================================================
+// PARTY DEFINITIONS
+// =============================================================================
 
 const PARTIES = [
   { key: 'con',  label: 'Con',     color: '#0087DC' },
@@ -248,10 +335,17 @@ const PARTIES = [
 
 const POLLSTER_COLORS = { Survation: '#a78bfa', Norstat: '#fb923c', Ipsos: '#38bdf8' };
 
+// =============================================================================
+// STATE
+// =============================================================================
+
 let constPolls = [], listPolls = [], incumbency = [];
 let activePollsterFilter = 'all', activeRegion = 'all';
 
-// ── COUNTDOWN ─────────────────────────────────────────────────
+// =============================================================================
+// COUNTDOWN
+// =============================================================================
+
 function updateCountdown() {
   const diff = Math.ceil((new Date('2026-05-07') - new Date()) / 86400000);
   document.getElementById('daysLeft').textContent = Math.max(0, diff);
@@ -259,7 +353,10 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 3600000);
 
-// ── TABS ──────────────────────────────────────────────────────
+// =============================================================================
+// TABS
+// =============================================================================
+
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -267,13 +364,17 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 
-// ── CSV PARSER ────────────────────────────────────────────────
+// =============================================================================
+// CSV PARSER
+// =============================================================================
+
 function parseCSV(text, skipRows) {
   const n = skipRows ?? 1;
   const lines = text.trim().split('\n');
   if (lines.length <= n) return [];
   return lines.slice(n).map(line => {
-    const cols = []; let cur = '', inQ = false;
+    const cols = [];
+    let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
       if (line[i] === '"') { inQ = !inQ; }
       else if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
@@ -289,7 +390,10 @@ function pct(v) {
   return parseFloat(String(v).replace('%', '')) || null;
 }
 
-// ── ROW PARSER ────────────────────────────────────────────────
+// =============================================================================
+// ROW PARSER
+// =============================================================================
+
 function parsePollRow(row, sourceName, src) {
   const d = src.colDate ?? 2;
   return {
@@ -297,32 +401,37 @@ function parsePollRow(row, sourceName, src) {
     pollster:       row[3]  || sourceName,
     client:         row[4]  || '',
     sample:         row[5]  || '',
-    likelyVoters:   (row[6] || '').trim().toUpperCase(),   // Y / N
-    undecidedsExcl: (row[7] || '').trim().toUpperCase(),   // Y / N
-    con:     pct(row[10]),
-    lab:     pct(row[11]),
-    lib:     pct(row[12]),
-    snp:     pct(row[13]),
-    alba:    pct(row[14]),
-    rfm:     pct(row[15]),
-    grn:     pct(row[16]),
-    others:  pct(row[17]),
+    likelyVoters:   (row[6] || '').trim().toUpperCase(),
+    undecidedsExcl: (row[7] || '').trim().toUpperCase(),
+    con:    pct(row[10]),
+    lab:    pct(row[11]),
+    lib:    pct(row[12]),
+    snp:    pct(row[13]),
+    alba:   pct(row[14]),
+    rfm:    pct(row[15]),
+    grn:    pct(row[16]),
+    others: pct(row[17]),
     _source: sourceName,
   };
 }
 
-// ── HEADLINE FILTER ───────────────────────────────────────────
-// Drop any row where undecideds are explicitly INCLUDED (col 7 = 'N').
-// Rows where the column is blank or 'Y' pass through — this handles both
-// Survation (explicit Y/N) and Norstat/Ipsos (column may be blank since
-// they always report headline figures).
+// =============================================================================
+// HEADLINE FILTER
+// Only applied to sources where filterUndecideds = true (Survation).
+// Drops rows where col 7 is explicitly 'N' (undecideds included = not headline).
+// Norstat and Ipsos are passed through untouched.
+// =============================================================================
+
 function isHeadlineRow(p, src) {
   if (!p.date) return false;
   if (src.filterUndecideds && p.undecidedsExcl === 'N') return false;
   return true;
 }
 
-// ── DATE HELPERS ──────────────────────────────────────────────
+// =============================================================================
+// DATE HELPERS
+// =============================================================================
+
 function parseDate(s) {
   if (!s) return null;
   const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
@@ -346,21 +455,27 @@ function sortByDate(arr) {
   });
 }
 
-// ── STATUS ────────────────────────────────────────────────────
+// =============================================================================
+// STATUS BAR
+// =============================================================================
+
 function setStatus(dotId, stId, state, msg) {
   document.getElementById(dotId).className = 'status-dot ' + state;
   document.getElementById(stId).textContent = msg;
 }
 
-// ── FETCH ─────────────────────────────────────────────────────
+// =============================================================================
+// FETCH
+// =============================================================================
+
 async function fetchCSV(src) {
   try {
     const resp = await fetch(src.url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const rows  = parseCSV(await resp.text(), src.skipRows);
     const polls = rows
-    .map(r => parsePollRow(r, src.name, src))
-    .filter(p => isHeadlineRow(p, src)); 
+      .map(r => parsePollRow(r, src.name, src))
+      .filter(p => isHeadlineRow(p, src));
     setStatus(src.dotId, src.stId, polls.length ? 'ok' : 'empty',
       `${src.name}: ${polls.length} poll${polls.length !== 1 ? 's' : ''}`);
     return polls;
@@ -372,7 +487,8 @@ async function fetchCSV(src) {
 
 async function loadAll() {
   const btn = document.getElementById('refreshBtn');
-  btn.classList.add('loading'); btn.textContent = '↻ Loading…';
+  btn.classList.add('loading');
+  btn.textContent = '↻ Loading…';
 
   [...SOURCES.constituency, ...SOURCES.list].forEach(s =>
     setStatus(s.dotId, s.stId, 'loading', s.name + '…'));
@@ -390,9 +506,15 @@ async function loadAll() {
     const resp = await fetch(SOURCES.incumbency.url);
     const rows = parseCSV(await resp.text(), 1);
     incumbency = rows.map(r => ({
-      constituency: r[0]||'', region: r[1]||'', winner2021: r[2]||'',
-      voteShare2021: r[3]||'', incumbentMSP: r[4]||'', standing: r[5]||'',
-      candidate2026: r[6]||'', source: r[7]||'', notes: r[8]||'',
+      constituency:  r[0] || '',
+      region:        r[1] || '',
+      winner2021:    r[2] || '',
+      voteShare2021: r[3] || '',
+      incumbentMSP:  r[4] || '',
+      standing:      r[5] || '',
+      candidate2026: r[6] || '',
+      source:        r[7] || '',
+      notes:         r[8] || '',
     })).filter(r => r.constituency);
     setStatus(SOURCES.incumbency.dotId, SOURCES.incumbency.stId, 'ok',
       `Incumbency: ${incumbency.length} constituencies`);
@@ -404,25 +526,33 @@ async function loadAll() {
 
   document.getElementById('lastUpdated').textContent = new Date().toLocaleString('en-GB');
   document.getElementById('st-updated').textContent  = 'Updated ' + new Date().toLocaleTimeString('en-GB');
-  btn.classList.remove('loading'); btn.textContent = '↻ Refresh';
+  btn.classList.remove('loading');
+  btn.textContent = '↻ Refresh';
   render();
 }
 
-// ── AVERAGE ───────────────────────────────────────────────────
-// One reading per pollster (most recent), equal-weight mean.
-// Tie-break on same date: prefer larger sample (primary headline figure).
+// =============================================================================
+// AVERAGING
+// One reading per pollster (most recent). Tie-break on same date: larger sample wins.
+// Equal-weight mean across pollsters.
+// =============================================================================
+
 function latestPerPollster(polls) {
   const byPollster = {};
   polls.forEach(p => {
     const existing = byPollster[p._source];
-    if (!existing) { byPollster[p._source] = p; return; }
+    if (!existing) {
+      byPollster[p._source] = p;
+      return;
+    }
     const pd = parseDate(p.date), ed = parseDate(existing.date);
     if (!pd || !ed) return;
-    if (pd > ed) { byPollster[p._source] = p; return; }
-    if (pd.getTime() === ed.getTime()) {
-      // Same date — prefer larger sample
-      if ((parseInt(p.sample)||0) > (parseInt(existing.sample)||0))
+    if (pd > ed) {
+      byPollster[p._source] = p;
+    } else if (pd.getTime() === ed.getTime()) {
+      if ((parseInt(p.sample) || 0) > (parseInt(existing.sample) || 0)) {
         byPollster[p._source] = p;
+      }
     }
   });
   return Object.values(byPollster);
@@ -444,13 +574,17 @@ function computeAverage(polls) {
   return avg;
 }
 
-// ── LATEST STRIP ──────────────────────────────────────────────
+// =============================================================================
+// LATEST STRIP
+// =============================================================================
+
 function renderLatestStrip(polls, stripId, metaId) {
   const strip = document.getElementById(stripId);
   const meta  = document.getElementById(metaId);
   if (!polls.length) {
     strip.innerHTML = `<div class="empty-state" style="grid-column:1/-1;padding:28px;">No data loaded</div>`;
-    meta.textContent = ''; return;
+    meta.textContent = '';
+    return;
   }
   const avg = computeAverage(polls);
   if (!avg) return;
@@ -460,46 +594,67 @@ function renderLatestStrip(polls, stripId, metaId) {
       <div class="party-chip-name">${p.label}</div>
       <div class="party-chip-pct" style="color:${p.color}">${avg[p.key] !== null ? avg[p.key] + '%' : '—'}</div>
     </div>`).join('');
-  const sourceDetails = avg._sources.map((s, i) => `${s} (${avg._latestDates[i]})`).join(' · ');
-  meta.textContent = `Headline average (undecideds excl.) · ${sourceDetails}`;
+  const detail = avg._sources.map((s, i) => `${s} (${avg._latestDates[i]})`).join(' · ');
+  meta.textContent = `Headline average (undecideds excl.) · ${detail}`;
 }
 
-// ── CHARTS ────────────────────────────────────────────────────
+// =============================================================================
+// CHARTS
+// =============================================================================
+
 let constChart, listChart;
 
 const CHART_OPTS = {
-  responsive: true, maintainAspectRatio: false,
+  responsive: true,
+  maintainAspectRatio: false,
   plugins: {
-    legend: { position: 'bottom', labels: { color: '#7a8aaa', font: { family: "'IBM Plex Mono'", size: 10 }, boxWidth: 10, boxHeight: 10, padding: 14 } },
+    legend: {
+      position: 'bottom',
+      labels: { color: '#7a8aaa', font: { family: "'IBM Plex Mono'", size: 10 }, boxWidth: 10, boxHeight: 10, padding: 14 },
+    },
     tooltip: {
       backgroundColor: '#1a2235', borderColor: '#2a3450', borderWidth: 1,
       titleColor: '#e8eaf2', bodyColor: '#7a8aaa',
-      titleFont: { family: "'IBM Plex Mono'", size: 11 }, bodyFont: { family: "'IBM Plex Mono'", size: 10 },
-      callbacks: { label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y + '%' : '—'}` }
-    }
+      titleFont: { family: "'IBM Plex Mono'", size: 11 },
+      bodyFont:  { family: "'IBM Plex Mono'", size: 10 },
+      callbacks: { label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y + '%' : '—'}` },
+    },
   },
   scales: {
-    x: { grid: { color: 'rgba(42,52,80,0.4)' }, ticks: { color: '#4a5878', font: { family: "'IBM Plex Mono'", size: 10 }, maxRotation: 45 } },
-    y: { min: 0, max: 55, grid: { color: 'rgba(42,52,80,0.4)' }, ticks: { color: '#4a5878', font: { family: "'IBM Plex Mono'", size: 10 }, callback: v => v + '%' } }
+    x: {
+      grid: { color: 'rgba(42,52,80,0.4)' },
+      ticks: { color: '#4a5878', font: { family: "'IBM Plex Mono'", size: 10 }, maxRotation: 45 },
+    },
+    y: {
+      min: 0, max: 55,
+      grid: { color: 'rgba(42,52,80,0.4)' },
+      ticks: { color: '#4a5878', font: { family: "'IBM Plex Mono'", size: 10 }, callback: v => v + '%' },
+    },
   },
-  elements: { point: { radius: 3, hoverRadius: 5 }, line: { tension: 0.3, borderWidth: 2 } }
+  elements: { point: { radius: 3, hoverRadius: 5 }, line: { tension: 0.3, borderWidth: 2 } },
 };
 
 function buildDatasets(polls) {
   return PARTIES.map(p => ({
-    label: p.label, data: polls.map(poll => poll[p.key]),
-    borderColor: p.color, backgroundColor: p.color + '18',
-    pointBackgroundColor: p.color, fill: false, spanGaps: true,
+    label: p.label,
+    data:  polls.map(poll => poll[p.key]),
+    borderColor:        p.color,
+    backgroundColor:    p.color + '18',
+    pointBackgroundColor: p.color,
+    fill: false,
+    spanGaps: true,
   }));
 }
 
 function initCharts() {
   constChart = new Chart(document.getElementById('constituencyChart').getContext('2d'), {
-    type: 'line', data: { labels: [], datasets: buildDatasets([]) },
+    type: 'line',
+    data: { labels: [], datasets: buildDatasets([]) },
     options: JSON.parse(JSON.stringify(CHART_OPTS)),
   });
   listChart = new Chart(document.getElementById('listChart').getContext('2d'), {
-    type: 'line', data: { labels: [], datasets: buildDatasets([]) },
+    type: 'line',
+    data: { labels: [], datasets: buildDatasets([]) },
     options: JSON.parse(JSON.stringify(CHART_OPTS)),
   });
 }
@@ -515,7 +670,10 @@ function updateCharts() {
   });
 }
 
-// ── POLLSTER CARDS ────────────────────────────────────────────
+// =============================================================================
+// POLLSTER CARDS
+// =============================================================================
+
 function renderPollsterCards(polls, containerId) {
   const container = document.getElementById(containerId);
   const pollsters = [...new Set(polls.map(p => p._source))];
@@ -537,16 +695,19 @@ function renderPollsterCards(polls, containerId) {
           <div class="pollster-bar-row">
             <div class="pollster-bar-label" style="color:${p.color}">${p.label}</div>
             <div class="pollster-bar-track">
-              <div class="pollster-bar-fill" style="width:${latest[p.key]||0}%;background:${p.color}"></div>
+              <div class="pollster-bar-fill" style="width:${latest[p.key] || 0}%;background:${p.color}"></div>
             </div>
-            <div class="pollster-bar-pct" style="color:${p.color}">${latest[p.key] !== null ? latest[p.key]+'%' : '—'}</div>
+            <div class="pollster-bar-pct" style="color:${p.color}">${latest[p.key] !== null ? latest[p.key] + '%' : '—'}</div>
           </div>`).join('')}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── RAW TABLE ─────────────────────────────────────────────────
+// =============================================================================
+// RAW TABLE
+// =============================================================================
+
 function filterPollster(name, btn) {
   document.querySelectorAll('#pollsterFilterRow .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -558,8 +719,17 @@ function renderPollsTable(polls, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   const data  = activePollsterFilter === 'all' ? polls : polls.filter(p => p._source === activePollsterFilter);
   const fmt   = v => v !== null ? v + '%' : '—';
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="12" class="empty-state">No polls to show</td></tr>`; return; }
-  const tagCls = n => n.toLowerCase().includes('survation') ? 'survation' : n.toLowerCase().includes('norstat') ? 'norstat' : n.toLowerCase().includes('ipsos') ? 'ipsos' : '';
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="12" class="empty-state">No polls to show</td></tr>`;
+    return;
+  }
+  const tagCls = n => {
+    const l = n.toLowerCase();
+    if (l.includes('survation')) return 'survation';
+    if (l.includes('norstat'))   return 'norstat';
+    if (l.includes('ipsos'))     return 'ipsos';
+    return '';
+  };
   tbody.innerHTML = [...data].reverse().map(p => `
     <tr>
       <td>${fmtDate(p.date)}</td>
@@ -582,12 +752,26 @@ function renderRawTables() {
   renderPollsTable(listPolls,  'listTableBody');
 }
 
-// ── INCUMBENCY ────────────────────────────────────────────────
+// =============================================================================
+// INCUMBENCY
+// =============================================================================
+
 function getPartyColor(name) {
   if (!name) return '#7a8aaa';
   const lc = name.toLowerCase();
-  const map = { conservative: '#0087DC', labour: '#E4003B', 'lib dem': '#FAA61A', liberal: '#FAA61A', snp: '#FDF38E', alba: '#005EB8', reform: '#12B6CF', green: '#00B140' };
-  for (const [k, v] of Object.entries(map)) if (lc.includes(k)) return v;
+  const map = {
+    conservative: '#0087DC',
+    labour:       '#E4003B',
+    'lib dem':    '#FAA61A',
+    liberal:      '#FAA61A',
+    snp:          '#FDF38E',
+    alba:         '#005EB8',
+    reform:       '#12B6CF',
+    green:        '#00B140',
+  };
+  for (const [k, v] of Object.entries(map)) {
+    if (lc.includes(k)) return v;
+  }
   return '#7a8aaa';
 }
 
@@ -595,8 +779,8 @@ function buildRegionFilters() {
   const regions = [...new Set(incumbency.map(r => r.region).filter(Boolean))].sort();
   document.getElementById('regionFilters').innerHTML =
     `<span class="filter-label">Region:</span>
-    <button class="filter-btn active" onclick="filterRegion('all',this)">All</button>` +
-    regions.map(r => `<button class="filter-btn" onclick="filterRegion(${JSON.stringify(r)},this)">${r}</button>`).join('');
+    <button class="filter-btn active" onclick="filterRegion('all', this)">All</button>` +
+    regions.map(r => `<button class="filter-btn" onclick="filterRegion(${JSON.stringify(r)}, this)">${r}</button>`).join('');
 }
 
 function filterRegion(region, btn) {
@@ -610,27 +794,37 @@ function renderIncumbency() {
   const data = activeRegion === 'all' ? incumbency : incumbency.filter(r => r.region === activeRegion);
   document.getElementById('inc-yes').textContent     = data.filter(r => r.standing.toLowerCase() === 'yes').length;
   document.getElementById('inc-no').textContent      = data.filter(r => r.standing.toLowerCase() === 'no').length;
-  document.getElementById('inc-unknown').textContent = data.filter(r => !['yes','no'].includes(r.standing.toLowerCase())).length;
+  document.getElementById('inc-unknown').textContent = data.filter(r => !['yes', 'no'].includes(r.standing.toLowerCase())).length;
   const tbody = document.getElementById('incumbencyTableBody');
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No data loaded</td></tr>`; return; }
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No data loaded</td></tr>`;
+    return;
+  }
   tbody.innerHTML = data.map(r => {
-    const sc  = r.standing.toLowerCase() === 'yes' ? 'standing-yes' : r.standing.toLowerCase() === 'no' ? 'standing-no' : 'standing-unknown';
-    const col = getPartyColor(r.winner2021);
-    const badge = r.winner2021 ? `<span class="winner-badge" style="background:${col}22;color:${col};border:1px solid ${col}44">${r.winner2021}</span>` : '—';
+    const sc  = r.standing.toLowerCase() === 'yes' ? 'standing-yes'
+              : r.standing.toLowerCase() === 'no'  ? 'standing-no'
+              : 'standing-unknown';
+    const col   = getPartyColor(r.winner2021);
+    const badge = r.winner2021
+      ? `<span class="winner-badge" style="background:${col}22;color:${col};border:1px solid ${col}44">${r.winner2021}</span>`
+      : '—';
     return `<tr>
       <td class="constituency-name">${r.constituency}</td>
       <td style="font-size:0.65rem">${r.region}</td>
       <td>${badge}</td>
-      <td>${r.voteShare2021||'—'}</td>
-      <td style="color:var(--text)">${r.incumbentMSP||'—'}</td>
-      <td><span class="${sc}">${r.standing||'Unknown'}</span></td>
-      <td>${r.candidate2026||'—'}</td>
-      <td style="font-size:0.65rem;max-width:180px;white-space:normal;color:var(--text-dim)">${r.notes||''}</td>
+      <td>${r.voteShare2021 || '—'}</td>
+      <td style="color:var(--text)">${r.incumbentMSP || '—'}</td>
+      <td><span class="${sc}">${r.standing || 'Unknown'}</span></td>
+      <td>${r.candidate2026 || '—'}</td>
+      <td style="font-size:0.65rem;max-width:180px;white-space:normal;color:var(--text-dim)">${r.notes || ''}</td>
     </tr>`;
   }).join('');
 }
 
-// ── RENDER ────────────────────────────────────────────────────
+// =============================================================================
+// RENDER
+// =============================================================================
+
 function render() {
   renderLatestStrip(constPolls, 'latestConstStrip', 'constAvgMeta');
   renderLatestStrip(listPolls,  'latestListStrip',  'listAvgMeta');
@@ -641,9 +835,13 @@ function render() {
   renderIncumbency();
 }
 
-// ── INIT ──────────────────────────────────────────────────────
+// =============================================================================
+// INIT
+// =============================================================================
+
 initCharts();
 loadAll();
+
 </script>
 </body>
 </html>

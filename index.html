@@ -121,7 +121,6 @@
   .filter-btn.active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
   .filter-btn:hover:not(.active) { border-color: var(--text-muted); }
 
-  /* 7 columns for 7 parties shown in the strip */
   .latest-strip {
     display: grid; grid-template-columns: repeat(7, 1fr);
     gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 10px;
@@ -362,31 +361,31 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
+// colDate: which column index (0-based) holds the date in that sheet
+// skipRows: how many rows to drop from the top (1 = just the header; increase if sheet has extra metadata rows)
 const SOURCES = {
   constituency: [
-    { name: 'Survation', dotId: 'dot-cs', stId: 'st-cs', colDate: 0, skipRows: 1, url: '...' },
-    { name: 'Norstat',   dotId: 'dot-cn', stId: 'st-cn', colDate: 3, skipRows: 1, url: '...' },
-    { name: 'Ipsos',     dotId: 'dot-ci', stId: 'st-ci', colDate: 3, skipRows: 1, url: '...' },
+    { name: 'Survation', dotId: 'dot-cs', stId: 'st-cs', colDate: 0, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRVHoDYDQBczBB68faWVZ6fGRNqPSjlJj9-yTKLzJc6h7P1OT6HQiFvz8aXVSG-JH9fZrPoq3X1Bw1K/pub?output=csv' },
+    { name: 'Norstat',   dotId: 'dot-cn', stId: 'st-cn', colDate: 3, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvwlOJGWbsgeU-1El-ruiXk0bo6_6Cv231HFmABtu7y1yukxmI8lrFDTveP3XSUXy6lfZi-RQ5_mKb/pub?output=csv' },
+    { name: 'Ipsos',     dotId: 'dot-ci', stId: 'st-ci', colDate: 3, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSkkfZ99xen3Z3FVOwVnxoqY2JZhxkEzejwagwS4p1n1f8awbC453uv5yb-ydAsagXz108FC-efiuQ_/pub?output=csv' },
   ],
   list: [
-    { name: 'Survation', dotId: 'dot-ls', stId: 'st-ls', colDate: 3, skipRows: 1, url: '...' },
-    { name: 'Norstat',   dotId: 'dot-ln', stId: 'st-ln', colDate: 3, skipRows: 3, url: '...' },  // ← skipRows fixes the 339
-    { name: 'Ipsos',     dotId: 'dot-li', stId: 'st-li', colDate: 3, skipRows: 1, url: '...' },
+    { name: 'Survation', dotId: 'dot-ls', stId: 'st-ls', colDate: 3, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7RAJi3HPG0Eu49vOIf8yBR-v2vue3lUkc-iCmat81k3fNP4SOL3gixDwRRc_bKTxQ_SOmS6qVNwfY/pub?output=csv' },
+    { name: 'Norstat',   dotId: 'dot-ln', stId: 'st-ln', colDate: 3, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQujNr-IGnS63Sp1zn-lGV-xlO8hfZRxsKHC1udfblPWpfliy7gYFNSt-sTB5dhlAlwodu0ng8Ex9R9/pub?output=csv' },
+    { name: 'Ipsos',     dotId: 'dot-li', stId: 'st-li', colDate: 3, skipRows: 1, url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRKZ0skhiQDkOWJplehISh4YktsynvLoSHYvqizkckRD2E8_AzXE-x0cO_WbhZ0HlmMzRgVHCaZJUD/pub?output=csv' },
   ],
+  incumbency: { dotId: 'dot-inc', stId: 'st-inc', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv' },
+};
 
-// ── PARTY ORDER: Con, Labour, Lib Dem, SNP, Alba, Reform, Green ──
-// This order is used everywhere: strips, charts, pollster cards, and tables.
-// It must match the column order in the Google Sheets:
-//   col 4 = Con, col 5 = Labour, col 6 = Lib Dem, col 7 = SNP,
-//   col 8 = Alba, col 9 = Reform, col 10 = Green, col 11 = Others
+// ── PARTY DEFINITIONS ─────────────────────────────────────────
 const PARTIES = [
-  { key: 'con',    label: 'Con',     color: '#0087DC' },
-  { key: 'lab',    label: 'Labour',  color: '#E4003B' },
-  { key: 'lib',    label: 'Lib Dem', color: '#FAA61A' },
-  { key: 'snp',    label: 'SNP',     color: '#FDF38E' },
-  { key: 'alba',   label: 'Alba',    color: '#005EB8' },
-  { key: 'rfm',    label: 'Reform',  color: '#12B6CF' },
-  { key: 'grn',    label: 'Green',   color: '#00B140' },
+  { key: 'con',  label: 'Con',     color: '#0087DC' },
+  { key: 'lab',  label: 'Labour',  color: '#E4003B' },
+  { key: 'lib',  label: 'Lib Dem', color: '#FAA61A' },
+  { key: 'snp',  label: 'SNP',     color: '#FDF38E' },
+  { key: 'alba', label: 'Alba',    color: '#005EB8' },
+  { key: 'rfm',  label: 'Reform',  color: '#12B6CF' },
+  { key: 'grn',  label: 'Green',   color: '#00B140' },
 ];
 
 const POLLSTER_COLORS = { Survation: '#a78bfa', Norstat: '#fb923c', Ipsos: '#38bdf8' };
@@ -412,10 +411,12 @@ function switchTab(name, btn) {
 }
 
 // ── CSV PARSER ────────────────────────────────────────────────
-function parseCSV(text) {
+// skipRows: how many leading rows to drop (default 1 = header only)
+function parseCSV(text, skipRows) {
+  const n = skipRows ?? 1;
   const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  return lines.slice(1).map(line => {
+  if (lines.length <= n) return [];
+  return lines.slice(n).map(line => {
     const cols = []; let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
       if (line[i] === '"') { inQ = !inQ; }
@@ -433,16 +434,25 @@ function pct(v) {
 }
 
 // ── ROW PARSER ────────────────────────────────────────────────
-// Google Sheet column order:
-//   3=Date, 4=Pollster, 5=Client, 6=Sample Size, 9=Relevant Question Number, 10=Question,
-//   11=Con, 12=Labour, 13=LibDem, 14=SNP, 15=Alba, 16=Reform, 17=Green, 18=Others,
-//   19=Would not vote, 20=Don't know, 21=Prefer not to say, 22=URL
+// Uses src.colDate to find the date column, defaults to 3.
+// Party columns (con, lab, lib, snp, alba, rfm, grn, others) remain fixed at 11–18
+// as they are consistent across all sheets.
 function parsePollRow(row, sourceName, src) {
   const d = src.colDate ?? 3;
   return {
-    date:    row[d] || '',
+    date:    row[d]  || '',
     pollster: row[4] || sourceName,
-    // ... rest stays the same
+    client:  row[5]  || '',
+    sample:  row[6]  || '',
+    con:     pct(row[11]),
+    lab:     pct(row[12]),
+    lib:     pct(row[13]),
+    snp:     pct(row[14]),
+    alba:    pct(row[15]),
+    rfm:     pct(row[16]),
+    grn:     pct(row[17]),
+    others:  pct(row[18]),
+    _source: sourceName,
   };
 }
 
@@ -480,7 +490,7 @@ async function fetchCSV(src) {
   try {
     const resp = await fetch(src.url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const rows = parseCSV(await resp.text());
+    const rows  = parseCSV(await resp.text(), src.skipRows);
     const polls = rows.map(r => parsePollRow(r, src.name, src)).filter(p => p.date);
     setStatus(src.dotId, src.stId, polls.length ? 'ok' : 'empty',
       `${src.name}: ${polls.length} poll${polls.length !== 1 ? 's' : ''}`);
@@ -509,7 +519,7 @@ async function loadAll() {
 
   try {
     const resp = await fetch(SOURCES.incumbency.url);
-    const rows = parseCSV(await resp.text());
+    const rows = parseCSV(await resp.text(), 1);
     incumbency = rows.map(r => ({
       constituency: r[0]||'', region: r[1]||'', winner2021: r[2]||'',
       voteShare2021: r[3]||'', incumbentMSP: r[4]||'', standing: r[5]||'',

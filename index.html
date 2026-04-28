@@ -204,17 +204,19 @@
     <div class="incumbency-table-wrap">
       <table class="incumbency-table">
         <thead>
-          <tr>
-            <th>Constituency</th>
-            <th>Region</th>
-            <th>2021 Winner (notional)</th>
-            <th>2021 Vote %</th>
-            <th>Incumbent MSP</th>
-            <th>Standing?</th>
-            <th>2026 Candidate</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
+  <tr>
+    <th>Constituency</th>
+    <th>Region</th>
+    <th>2021 Winner</th>
+    <th>2021 Runner Up</th>
+    <th>Majority</th>
+    <th>Incumbent MSP</th>
+    <th>Standing?</th>
+    <th>2026 Candidate</th>
+    <th>Party Change</th>
+    <th>Notes</th>
+  </tr>
+</thead>
         <tbody id="incumbencyTableBody">
           <tr><td colspan="8" class="empty-state">Loading…</td></tr>
         </tbody>
@@ -506,16 +508,24 @@ async function loadAll() {
     const resp = await fetch(SOURCES.incumbency.url);
     const rows = parseCSV(await resp.text(), 1);
     incumbency = rows.map(r => ({
-      constituency:  r[0] || '',
-      region:        r[1] || '',
-      winner2021:    r[2] || '',
-      voteShare2021: r[3] || '',
-      incumbentMSP:  r[4] || '',
-      standing:      r[5] || '',
-      candidate2026: r[6] || '',
-      source:        r[7] || '',
-      notes:         r[8] || '',
-    })).filter(r => r.constituency);
+  constituency:    r[0]  || '',
+  region:          r[1]  || '',
+  winner2021:      r[2]  || '',
+  winnerParty:     r[3]  || '',
+  runnerUp:        r[4]  || '',
+  runnerUpParty:   r[5]  || '',
+  voteShare:       r[6]  || '',
+  majority:        r[7]  || '',
+  incumbentMSP:    r[8]  || '',
+  standing:        r[9]  || '',
+  incumbentParty:  r[10] || '',
+  retirementRisk:  r[11] || '',
+  candidate2026:   r[12] || '',
+  candidateParty:  r[13] || '',
+  source:          r[14] || '',
+  notes:           r[15] || '',
+  boundaryChange:  r[16] || '',
+})).filter(r => r.constituency);
     setStatus(SOURCES.incumbency.dotId, SOURCES.incumbency.stId, 'ok',
       `Incumbency: ${incumbency.length} constituencies`);
     buildRegionFilters();
@@ -792,31 +802,68 @@ function filterRegion(region, btn) {
 
 function renderIncumbency() {
   const data = activeRegion === 'all' ? incumbency : incumbency.filter(r => r.region === activeRegion);
+
   document.getElementById('inc-yes').textContent     = data.filter(r => r.standing.toLowerCase() === 'yes').length;
   document.getElementById('inc-no').textContent      = data.filter(r => r.standing.toLowerCase() === 'no').length;
-  document.getElementById('inc-unknown').textContent = data.filter(r => !['yes', 'no'].includes(r.standing.toLowerCase())).length;
+  document.getElementById('inc-unknown').textContent = data.filter(r => !['yes','no'].includes(r.standing.toLowerCase())).length;
+
   const tbody = document.getElementById('incumbencyTableBody');
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No data loaded</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No data loaded</td></tr>`;
     return;
   }
+
   tbody.innerHTML = data.map(r => {
-    const sc  = r.standing.toLowerCase() === 'yes' ? 'standing-yes'
-              : r.standing.toLowerCase() === 'no'  ? 'standing-no'
-              : 'standing-unknown';
-    const col   = getPartyColor(r.winner2021);
-    const badge = r.winner2021
-      ? `<span class="winner-badge" style="background:${col}22;color:${col};border:1px solid ${col}44">${r.winner2021}</span>`
-      : '—';
+    const sc = r.standing.toLowerCase() === 'yes' ? 'standing-yes'
+             : r.standing.toLowerCase() === 'no'  ? 'standing-no'
+             : 'standing-unknown';
+
+    // Party badge helper
+    const badge = (name, party) => {
+      if (!name && !party) return '—';
+      const col = getPartyColor(party || name);
+      const label = party || '';
+      return `<span style="display:inline-flex;align-items:center;gap:6px">
+        ${name || ''}
+        ${label ? `<span style="background:${col}22;color:${col};border:1px solid ${col}44;padding:1px 6px;font-size:0.58rem;letter-spacing:0.06em">${label}</span>` : ''}
+      </span>`;
+    };
+
+    // Party change indicator
+    const iParty = r.incumbentParty.toLowerCase();
+    const cParty = r.candidateParty.toLowerCase();
+    const partyChanged = r.incumbentParty && r.candidateParty && iParty !== cParty;
+    const iCol = getPartyColor(r.incumbentParty);
+    const cCol = getPartyColor(r.candidateParty);
+
+    let partyCell;
+    if (!r.incumbentParty || !r.candidateParty) {
+      partyCell = '—';
+    } else if (partyChanged) {
+      partyCell = `<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.58rem">${r.incumbentParty}</span>
+        <span style="color:var(--text-dim);margin:0 3px">→</span>
+        <span style="background:${cCol}22;color:${cCol};border:1px solid ${cCol}44;padding:1px 6px;font-size:0.58rem">${r.candidateParty}</span>`;
+    } else {
+      partyCell = `<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.58rem">${r.incumbentParty}</span>
+        <span style="color:var(--text-dim);font-size:0.6rem;margin-left:4px">same</span>`;
+    }
+
+    // Boundary change indicator on constituency name
+    const bcFlag = r.boundaryChange && r.boundaryChange.toUpperCase() === 'YES'
+      ? ` <span style="color:var(--accent);font-size:0.55rem;letter-spacing:0.08em" title="Boundary change">BC</span>`
+      : '';
+
     return `<tr>
-      <td class="constituency-name">${r.constituency}</td>
+      <td class="constituency-name">${r.constituency}${bcFlag}</td>
       <td style="font-size:0.65rem">${r.region}</td>
-      <td>${badge}</td>
-      <td>${r.voteShare2021 || '—'}</td>
+      <td>${badge(r.winner2021, r.winnerParty)}</td>
+      <td>${badge(r.runnerUp, r.runnerUpParty)}</td>
+      <td style="font-size:0.65rem">${r.majority ? r.majority + '%' : '—'}</td>
       <td style="color:var(--text)">${r.incumbentMSP || '—'}</td>
       <td><span class="${sc}">${r.standing || 'Unknown'}</span></td>
-      <td>${r.candidate2026 || '—'}</td>
-      <td style="font-size:0.65rem;max-width:180px;white-space:normal;color:var(--text-dim)">${r.notes || ''}</td>
+      <td>${badge(r.candidate2026, r.candidateParty)}</td>
+      <td>${partyCell}</td>
+      <td style="font-size:0.65rem;max-width:160px;white-space:normal;color:var(--text-dim)">${r.notes || ''}</td>
     </tr>`;
   }).join('');
 }

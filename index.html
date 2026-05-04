@@ -37,7 +37,7 @@
   .status-dot.error { background: #f87171; }
   .status-dot.empty { background: var(--text-dim); }
   @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-  .tab-row { display: flex; gap: 2px; margin-bottom: 28px; }
+  .tab-row { display: flex; gap: 2px; margin-bottom: 28px; flex-wrap: wrap; }
   .tab-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 24px; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
   .tab-btn.active { background: var(--accent); color: #0a0e1a; border-color: var(--accent); font-weight: 500; }
   .tab-btn:hover:not(.active) { border-color: var(--text-muted); color: var(--text); }
@@ -99,9 +99,54 @@
   .footer-text { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; color: var(--text-dim); }
   .footer-sources a { color: var(--text-muted); text-decoration: none; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; margin-left: 16px; transition: color 0.2s; }
   .footer-sources a:hover { color: var(--accent); }
+
+  /* ── MRP / Seat Projection ─────────────────────────────────────────────── */
+  .mrp-note { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 13px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--text-muted); margin-bottom: 26px; line-height: 1.75; }
+  .mrp-note-label { color: var(--accent); font-weight: 500; }
+  .mrp-seats-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 10px; }
+  .mrp-seat-chip { background: var(--bg2); padding: 16px 10px; text-align: center; transition: background 0.2s; }
+  .mrp-seat-chip:hover { background: var(--bg3); }
+  .mrp-seat-total { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+  .mrp-seat-delta { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; margin-top: 2px; }
+  .mrp-seat-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--text-muted); margin-top: 3px; }
+  .mrp-seat-split { font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; color: var(--text-dim); margin-top: 2px; }
+  .mrp-majority-note { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--text-dim); margin-bottom: 28px; text-align: right; }
+  .seat-bar-outer { position: relative; margin: 18px 0 6px; }
+  .seat-bar { display: flex; height: 30px; border-radius: 2px; overflow: hidden; }
+  .seat-bar-seg { height: 100%; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .seat-bar-maj-line { position: absolute; top: -5px; width: 2px; height: 40px; background: var(--accent); opacity: 0.75; pointer-events: none; }
+  .seat-bar-maj-label { position: absolute; top: -18px; font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; color: var(--accent); transform: translateX(-50%); white-space: nowrap; }
+  .mrp-split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .mrp-split-card { background: var(--bg2); border: 1px solid var(--border); padding: 22px; }
+  .mrp-split-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+  .mrp-split-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; color: var(--text-muted); margin-bottom: 16px; }
+  .horiz-bars { display: flex; flex-direction: column; gap: 7px; }
+  .horiz-bar-row { display: flex; align-items: center; gap: 8px; }
+  .horiz-bar-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; width: 58px; flex-shrink: 0; text-align: right; }
+  .horiz-bar-track { flex: 1; height: 20px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .horiz-bar-fill { height: 100%; display: flex; align-items: center; padding-left: 6px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .horiz-bar-n { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; font-weight: 500; }
+  .horiz-bar-pct { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; width: 28px; flex-shrink: 0; color: var(--text-dim); }
+  .swing-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 32px; }
+  .swing-chip { background: var(--bg2); padding: 14px 8px; text-align: center; }
+  .swing-chip-party { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .swing-chip-val { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; line-height: 1; }
+  .swing-chip-type { font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; color: var(--text-dim); margin-top: 3px; }
+  .swing-pos { color: #4ade80; }
+  .swing-neg { color: #f87171; }
+  .swing-neu { color: var(--text-dim); }
+  .mrp-region-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; min-width: 700px; }
+  .mrp-region-table th { text-align: left; padding: 8px 10px; color: var(--text-dim); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--bg2); white-space: nowrap; }
+  .mrp-region-table td { padding: 9px 10px; border-bottom: 1px solid rgba(42,52,80,0.4); color: var(--text-muted); }
+  .mrp-region-table tr:hover td { background: var(--bg3); }
+  .mrp-region-table td.rname { color: var(--text); font-weight: 500; }
+  .mrp-region-table tfoot td { border-top: 1px solid var(--border); color: var(--text); font-weight: 500; padding-top: 10px; }
+  .mrp-coverage-note { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--text-dim); text-align: right; margin-bottom: 28px; }
+  .party-pill { display: inline-block; padding: 1px 7px; font-size: 0.58rem; border-radius: 1px; }
+
   @media (max-width: 900px) {
-    .charts-grid, .pollster-grid, .incumbent-summary { grid-template-columns: 1fr; }
-    .latest-strip { grid-template-columns: repeat(4, 1fr); }
+    .charts-grid, .pollster-grid, .incumbent-summary, .mrp-split-grid { grid-template-columns: 1fr; }
+    .latest-strip, .mrp-seats-strip, .swing-grid { grid-template-columns: repeat(4, 1fr); }
     header, main, footer { padding-left: 20px; padding-right: 20px; }
   }
 </style>
@@ -132,6 +177,7 @@
     <div class="status-item"><div class="status-dot loading" id="dot-ln"></div><span id="st-ln">List: Norstat…</span></div>
     <div class="status-item"><div class="status-dot loading" id="dot-li"></div><span id="st-li">List: Ipsos…</span></div>
     <div class="status-item"><div class="status-dot loading" id="dot-inc"></div><span id="st-inc">Incumbency…</span></div>
+    <div class="status-item"><div class="status-dot empty" id="dot-pr"></div><span id="st-pr">Postrat: URL not set</span></div>
     <div class="status-item" style="margin-left:auto;"><span id="st-updated" style="color:var(--text-dim)">—</span></div>
   </div>
 
@@ -140,6 +186,7 @@
     <button class="tab-btn" onclick="switchTab('compare', this)">By Pollster</button>
     <button class="tab-btn" onclick="switchTab('incumbency', this)">Incumbency</button>
     <button class="tab-btn" onclick="switchTab('rawdata', this)">Raw Data</button>
+    <button class="tab-btn" onclick="switchTab('mrp', this)">Seat Projection</button>
   </div>
 
   <!-- POLLING TAB -->
@@ -204,16 +251,9 @@
       <table class="incumbency-table">
         <thead>
           <tr>
-            <th>Constituency</th>
-            <th>Region</th>
-            <th>2021 Winner</th>
-            <th>2021 Runner Up</th>
-            <th>Majority</th>
-            <th>Incumbent MSP</th>
-            <th>Standing?</th>
-            <th>2026 Candidate</th>
-            <th>Party Change</th>
-            <th>Notes</th>
+            <th>Constituency</th><th>Region</th><th>2021 Winner</th><th>2021 Runner Up</th>
+            <th>Majority</th><th>Incumbent MSP</th><th>Standing?</th>
+            <th>2026 Candidate</th><th>Party Change</th><th>Notes</th>
           </tr>
         </thead>
         <tbody id="incumbencyTableBody">
@@ -238,19 +278,13 @@
         <thead>
           <tr>
             <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
-            <th style="color:var(--con)">Con</th>
-            <th style="color:var(--lab)">Labour</th>
-            <th style="color:var(--lib)">Lib Dem</th>
-            <th style="color:var(--snp)">SNP</th>
-            <th style="color:var(--alba)">Alba</th>
-            <th style="color:var(--rfm)">Reform</th>
-            <th style="color:var(--grn)">Green</th>
-            <th>Others</th>
+            <th style="color:var(--con)">Con</th><th style="color:var(--lab)">Labour</th>
+            <th style="color:var(--lib)">Lib Dem</th><th style="color:var(--snp)">SNP</th>
+            <th style="color:var(--alba)">Alba</th><th style="color:var(--rfm)">Reform</th>
+            <th style="color:var(--grn)">Green</th><th>Others</th>
           </tr>
         </thead>
-        <tbody id="constTableBody">
-          <tr><td colspan="12" class="empty-state">Loading…</td></tr>
-        </tbody>
+        <tbody id="constTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
       </table>
     </div>
     <div class="section-label">Regional List Vote — All Polls</div>
@@ -259,22 +293,108 @@
         <thead>
           <tr>
             <th>Date</th><th>Pollster</th><th>Client</th><th>Sample</th>
-            <th style="color:var(--con)">Con</th>
-            <th style="color:var(--lab)">Labour</th>
-            <th style="color:var(--lib)">Lib Dem</th>
-            <th style="color:var(--snp)">SNP</th>
-            <th style="color:var(--alba)">Alba</th>
-            <th style="color:var(--rfm)">Reform</th>
-            <th style="color:var(--grn)">Green</th>
-            <th>Others</th>
+            <th style="color:var(--con)">Con</th><th style="color:var(--lab)">Labour</th>
+            <th style="color:var(--lib)">Lib Dem</th><th style="color:var(--snp)">SNP</th>
+            <th style="color:var(--alba)">Alba</th><th style="color:var(--rfm)">Reform</th>
+            <th style="color:var(--grn)">Green</th><th>Others</th>
           </tr>
         </thead>
-        <tbody id="listTableBody">
-          <tr><td colspan="12" class="empty-state">Loading…</td></tr>
-        </tbody>
+        <tbody id="listTableBody"><tr><td colspan="12" class="empty-state">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
+
+  <!-- SEAT PROJECTION TAB -->
+  <div class="tab-panel" id="tab-mrp">
+
+    <div class="mrp-note">
+      <span class="mrp-note-label">Methodology · </span>
+      Constituency seats projected via <strong>Uniform National Swing (UNS)</strong> applied to each 2021 constituency result from the incumbency sheet.
+      Regional list seats (7 per region) allocated via <strong>D'Hondt</strong> with proper AMS adjustment —
+      each party's list vote share is divided by total seats won in that region + 1, so constituency gains naturally suppress list returns.
+      Polling average drawn from: <span id="mrpSources" style="color:var(--text)">—</span>.
+      <span style="color:var(--text-dim)"> · Demographic crosstab adjustment pending published sheet URLs (MRP-lite pending).</span>
+    </div>
+
+    <!-- Method toggle — second option enabled once postrat JSON is loaded -->
+    <div style="display:flex;gap:2px;margin-bottom:24px" id="mrpMethodToggle">
+      <button class="tab-btn active" id="btnUNS"
+              onclick="setProjectionMethod('uns', this)"
+              style="font-size:0.65rem;padding:8px 18px">
+        Uniform National Swing
+      </button>
+      <button class="tab-btn" id="btnPostrat"
+              onclick="setProjectionMethod('postrat', this)"
+              style="font-size:0.65rem;padding:8px 18px"
+              title="Enable by setting SOURCES.postrat.url and refreshing">
+        Demographic Adjusted (R)
+      </button>
+    </div>
+
+    <div class="section-label">Projected Seat Totals — all 129 seats</div>
+    <div class="mrp-seats-strip" id="mrpSeatsStrip">
+      <div class="empty-state" style="grid-column:1/-1;padding:28px">Load polling data first — click ↻ Refresh above</div>
+    </div>
+    <div class="mrp-majority-note" id="mrpMajNote">—</div>
+
+    <!-- Proportional seat bar -->
+    <div id="seatBarWrap" style="margin-bottom:32px"></div>
+
+    <!-- Hemicycle + split bars -->
+    <div class="charts-grid" style="margin-bottom:24px">
+      <div class="chart-card" style="display:flex;flex-direction:column">
+        <div class="chart-title">Parliament Composition</div>
+        <div class="chart-meta">129 seats · majority at 65 · arranged left → right</div>
+        <div id="hemicycleWrap" style="flex:1;display:flex;align-items:center;justify-content:center;padding-top:8px"></div>
+      </div>
+      <div class="chart-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;height:100%">
+          <div>
+            <div class="mrp-split-title">Constituency</div>
+            <div class="mrp-split-meta">73 seats · FPTP</div>
+            <div class="horiz-bars" id="constSeatsBars"></div>
+          </div>
+          <div>
+            <div class="mrp-split-title">Regional List</div>
+            <div class="mrp-split-meta">56 seats · D'Hondt AMS</div>
+            <div class="horiz-bars" id="listSeatsBars"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swing vs 2021 -->
+    <div class="section-label">National Swing vs 2021 Baseline</div>
+    <div class="swing-grid" id="swingGrid" style="margin-bottom:32px">
+      <div class="empty-state" style="grid-column:1/-1;padding:20px">—</div>
+    </div>
+
+    <!-- Region breakdown -->
+    <div class="section-label">Projected Seats by SP Region</div>
+    <div class="mrp-coverage-note" id="mrpCoverageNote">—</div>
+    <div class="incumbency-table-wrap">
+      <table class="mrp-region-table">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th style="color:var(--grn)">Green</th>
+            <th style="color:var(--snp)">SNP</th>
+            <th style="color:var(--alba)">Alba</th>
+            <th style="color:var(--lib)">Lib Dem</th>
+            <th style="color:var(--lab)">Labour</th>
+            <th style="color:var(--con)">Con</th>
+            <th style="color:var(--rfm)">Reform</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="regionTableBody">
+          <tr><td colspan="9" class="empty-state">Awaiting data…</td></tr>
+        </tbody>
+        <tfoot id="regionTableFoot"></tfoot>
+      </table>
+    </div>
+
+  </div><!-- /tab-mrp -->
 
 </main>
 
@@ -291,28 +411,6 @@
 
 // =============================================================================
 // CONFIG
-//
-// Polling sheet column layout (0-based):
-//   0=Poll ID, 1=Date start, 2=Date end, 3=Pollster, 4=Client,
-//   5=Sample Size, 6=Likely Voters Only (Y/N), 7=Undecideds Excluded (Y/N),
-//   8=Question Number, 9=Question Text,
-//   10=Con, 11=Labour, 12=Lib Dem, 13=SNP, 14=Alba, 15=Reform,
-//   16=Green, 17=Other, 18=Would not vote, 19=Don't know, 20=Prefer not to say, 21=URL
-//
-// Incumbency sheet column layout (0-based):
-//   0=Constituency, 1=Region, 2=2021 Winner, 3=2021 Winner Party,
-//   4=2021 Runner Up, 5=2021 Runner Up Party, 6=2021 Vote Share,
-//   7=2021 Majority, 8=Incumbent MSP, 9=Standing?, 10=Incumbent Party,
-//   11=Retirement Risk, 12=Candidate 2026, 13=Candidate Party,
-//   14=Source, 15=Notes, 16=Boundary Changes
-//
-// colDate notes:
-//   Survation/Norstat → use col 2 (Date end, consistently filled)
-//   Ipsos             → use col 1 (Date start; Date end is often blank)
-//
-// filterUndecideds: true  → only keep rows where col 7 = 'Y'
-//                           (Survation has V1/V1_1/V1_2 sub-questions; only V1 has Y)
-// filterUndecideds: false → keep all rows (Norstat/Ipsos always report headline)
 // =============================================================================
 
 const SOURCES = {
@@ -331,7 +429,13 @@ const SOURCES = {
     stId:  'st-inc',
     url:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv',
   },
-}; // end SOURCES
+  // ── Poststratification output from holyrood_postrat.R ───────────────────
+  // After running the R script, upload output/constituency_estimates.json to
+  // GitHub Gist, click Raw, and paste the URL here.
+  postrat: {
+    url: null,   // e.g. 'https://gist.githubusercontent.com/you/abc123/raw/constituency_estimates.json'
+  },
+};
 
 // =============================================================================
 // PARTY DEFINITIONS
@@ -347,14 +451,35 @@ const PARTIES = [
   { key: 'grn',  label: 'Green',   color: '#00B140' },
 ];
 
+// Left-to-right political order for hemicycle and seat bar
+const SEAT_ORDER_LR = ['grn', 'alba', 'snp', 'lib', 'lab', 'con', 'rfm'];
+
 const POLLSTER_COLORS = { Survation: '#a78bfa', Norstat: '#fb923c', Ipsos: '#38bdf8' };
+
+// =============================================================================
+// SEAT PROJECTION: 2021 BASELINES
+// Official 2021 Scottish Parliament election results
+// =============================================================================
+
+const BASELINES_2021 = {
+  // Constituency vote shares (% of votes cast, undecideds excluded)
+  constituency: { con: 22.2, lab: 21.6, lib: 7.9, snp: 47.7, alba: 0.2, rfm: 0.0, grn: 0.6 },
+  // Regional list vote shares
+  list:         { con: 23.5, lab: 17.9, lib: 5.2, snp: 40.3, alba: 1.7, rfm: 0.0, grn: 6.6 },
+  // 2021 seat totals (for +/- comparison)
+  seats: {
+    con: 31, lab: 22, lib: 4, snp: 64, alba: 0, rfm: 0, grn: 7
+    // Note: 1 independent also elected (not tracked in party system)
+  },
+};
 
 // =============================================================================
 // STATE
 // =============================================================================
 
-let constPolls = [], listPolls = [], incumbency = [];
+let constPolls = [], listPolls = [], incumbency = [], postratData = null;
 let activePollsterFilter = 'all', activeRegion = 'all';
+let usePostrat = false; // toggled by button in Seat Projection tab
 
 // =============================================================================
 // COUNTDOWN
@@ -376,6 +501,7 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  if (name === 'mrp') renderSeatProjection();
 }
 
 // =============================================================================
@@ -404,7 +530,6 @@ function pct(v) {
   return parseFloat(String(v).replace('%', '')) || null;
 }
 
-// Safely append % — avoids doubling on values that already carry it
 function fmtPct(v) {
   if (!v || v === '' || v === '-' || v === 'N/A') return '—';
   const s = String(v).trim();
@@ -412,7 +537,7 @@ function fmtPct(v) {
 }
 
 // =============================================================================
-// ROW PARSER (polling)
+// ROW PARSER
 // =============================================================================
 
 function parsePollRow(row, sourceName, src) {
@@ -436,12 +561,6 @@ function parsePollRow(row, sourceName, src) {
   };
 }
 
-// =============================================================================
-// HEADLINE FILTER
-// filterUndecideds: true  → drop rows where col 7 = 'N' (Survation sub-questions)
-// filterUndecideds: false → pass all rows through (Norstat/Ipsos)
-// =============================================================================
-
 function isHeadlineRow(p, src) {
   if (!p.date) return false;
   if (src.filterUndecideds && p.undecidedsExcl === 'N') return false;
@@ -454,7 +573,6 @@ function isHeadlineRow(p, src) {
 
 function parseDate(s) {
   if (!s) return null;
-  // DD/MM/YY or DD/MM/YYYY or DD-MM-YYYY
   const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (dmy) {
     const y = dmy[3].length === 2 ? '20' + dmy[3] : dmy[3];
@@ -555,30 +673,52 @@ async function loadAll() {
 
   document.getElementById('lastUpdated').textContent = new Date().toLocaleString('en-GB');
   document.getElementById('st-updated').textContent  = 'Updated ' + new Date().toLocaleTimeString('en-GB');
+
+  // Load poststratification JSON from R output (optional — only if URL is set)
+  if (SOURCES.postrat.url) {
+    try {
+      const resp = await fetch(SOURCES.postrat.url);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      postratData = await resp.json();
+      const n = Object.keys(postratData.constituencies || {}).length;
+      setStatus('dot-pr', 'st-pr', 'ok', `Postrat: ${n} constituencies`);
+    } catch(e) {
+      postratData = null;
+      setStatus('dot-pr', 'st-pr', 'error', 'Postrat: failed');
+    }
+  } else {
+    setStatus('dot-pr', 'st-pr', 'empty', 'Postrat: URL not set');
+  }
   btn.classList.remove('loading');
   btn.textContent = '↻ Refresh';
+
+  // Enable the Demographic Adjusted toggle if postrat data loaded
+  const prBtn = document.getElementById('btnPostrat');
+  if (prBtn) {
+    if (postratData) {
+      prBtn.style.opacity = '1';
+      prBtn.title = 'Switch to demographically-adjusted estimates from R';
+    } else {
+      prBtn.style.opacity = '0.4';
+      prBtn.title = 'Run holyrood_postrat.R and set SOURCES.postrat.url to enable';
+    }
+  }
   render();
 }
 
 // =============================================================================
 // AVERAGING
-// One reading per pollster (most recent). Tie-break on same date: larger sample wins.
-// Equal-weight mean across pollsters.
 // =============================================================================
 
 function latestPerPollster(polls) {
   const byPollster = {};
   polls.forEach(p => {
     const existing = byPollster[p._source];
-    if (!existing) {
-      byPollster[p._source] = p;
-      return;
-    }
+    if (!existing) { byPollster[p._source] = p; return; }
     const pd = parseDate(p.date), ed = parseDate(existing.date);
     if (!pd || !ed) return;
-    if (pd > ed) {
-      byPollster[p._source] = p;
-    } else if (pd.getTime() === ed.getTime()) {
+    if (pd > ed) { byPollster[p._source] = p; }
+    else if (pd.getTime() === ed.getTime()) {
       if ((parseInt(p.sample) || 0) > (parseInt(existing.sample) || 0)) {
         byPollster[p._source] = p;
       }
@@ -789,15 +929,9 @@ function getPartyColor(name) {
   if (!name) return '#7a8aaa';
   const lc = name.toLowerCase();
   const map = {
-    conservative: '#0087DC',
-    labour:       '#E4003B',
-    'lib dem':    '#FAA61A',
-    liberal:      '#FAA61A',
-    snp:          '#FDF38E',
-    alba:         '#005EB8',
-    reform:       '#12B6CF',
-    green:        '#00B140',
-    independent:  '#94a3b8',
+    conservative: '#0087DC', labour: '#E4003B', 'lib dem': '#FAA61A',
+    liberal: '#FAA61A', snp: '#FDF38E', alba: '#005EB8',
+    reform: '#12B6CF', green: '#00B140', independent: '#94a3b8',
   };
   for (const [k, v] of Object.entries(map)) {
     if (lc.includes(k)) return v;
@@ -805,7 +939,6 @@ function getPartyColor(name) {
   return '#7a8aaa';
 }
 
-// Renders a person's name + coloured party pill
 function personBadge(name, party) {
   if (!name && !party) return '—';
   const col = getPartyColor(party || name);
@@ -832,48 +965,33 @@ function filterRegion(region, btn) {
 
 function renderIncumbency() {
   const data = activeRegion === 'all' ? incumbency : incumbency.filter(r => r.region === activeRegion);
-
   document.getElementById('inc-yes').textContent     = data.filter(r => r.standing.toLowerCase() === 'yes').length;
   document.getElementById('inc-no').textContent      = data.filter(r => r.standing.toLowerCase() === 'no').length;
   document.getElementById('inc-unknown').textContent = data.filter(r => !['yes','no'].includes(r.standing.toLowerCase())).length;
-
   const tbody = document.getElementById('incumbencyTableBody');
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No data loaded</td></tr>`;
     return;
   }
-
   tbody.innerHTML = data.map(r => {
-
-    // Standing indicator
     const sc = r.standing.toLowerCase() === 'yes' ? 'standing-yes'
-             : r.standing.toLowerCase() === 'no'  ? 'standing-no'
-             : 'standing-unknown';
-
-    // Party change column
+             : r.standing.toLowerCase() === 'no'  ? 'standing-no' : 'standing-unknown';
     const iCol = getPartyColor(r.incumbentParty);
     const cCol = getPartyColor(r.candidateParty);
     const partyChanged = r.incumbentParty && r.candidateParty &&
                          r.incumbentParty.toLowerCase() !== r.candidateParty.toLowerCase();
     let partyCell;
-    if (!r.incumbentParty || !r.candidateParty) {
-      partyCell = '—';
-    } else if (partyChanged) {
-      partyCell = `
-        <span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.57rem">${r.incumbentParty}</span>
+    if (!r.incumbentParty || !r.candidateParty) { partyCell = '—'; }
+    else if (partyChanged) {
+      partyCell = `<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.57rem">${r.incumbentParty}</span>
         <span style="color:var(--text-dim);margin:0 3px">→</span>
         <span style="background:${cCol}22;color:${cCol};border:1px solid ${cCol}44;padding:1px 6px;font-size:0.57rem">${r.candidateParty}</span>`;
     } else {
-      partyCell = `
-        <span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.57rem">${r.incumbentParty}</span>
+      partyCell = `<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:0.57rem">${r.incumbentParty}</span>
         <span style="color:var(--text-dim);font-size:0.58rem;margin-left:4px">same</span>`;
     }
-
-    // Boundary change flag on constituency name
     const bcFlag = r.boundaryChange && r.boundaryChange.toUpperCase() === 'YES'
-      ? ` <span style="color:var(--accent);font-size:0.54rem;letter-spacing:0.08em" title="Boundary change">BC</span>`
-      : '';
-
+      ? ` <span style="color:var(--accent);font-size:0.54rem;letter-spacing:0.08em" title="Boundary change">BC</span>` : '';
     return `<tr>
       <td class="constituency-name">${r.constituency}${bcFlag}</td>
       <td style="font-size:0.63rem">${r.region}</td>
@@ -890,7 +1008,506 @@ function renderIncumbency() {
 }
 
 // =============================================================================
-// RENDER
+// SEAT PROJECTION: METHOD TOGGLE
+// =============================================================================
+
+function setProjectionMethod(method, btn) {
+  if (method === 'postrat' && !postratData) {
+    alert('Demographic Adjusted mode requires the R script output.\n\n' +
+          'Run holyrood_postrat.R → upload output/constituency_estimates.json ' +
+          'to GitHub Gist → paste the raw URL into SOURCES.postrat.url → Refresh.');
+    return;
+  }
+  usePostrat = (method === 'postrat');
+  document.querySelectorAll('#mrpMethodToggle .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Update methodology note
+  const note = document.querySelector('.mrp-note');
+  if (note && usePostrat && postratData) {
+    note.innerHTML = `<span class="mrp-note-label">Methodology · </span>
+      <strong>Demographic Adjusted</strong> — constituency vote shares from R poststratification script
+      (marginal reweighting by NRS Census 2022 age × sex composition, equal-weight averaged across pollsters).
+      Regional list seats via D'Hondt AMS per region.
+      Generated: <span style="color:var(--text)">${postratData.meta?.generated?.slice(0,10) || '—'}</span> ·
+      ${postratData.meta?.constituencies || '?'} constituencies ·
+      <span style="color:var(--text-dim)">${postratData.meta?.method_note || ''}</span>`;
+  }
+  renderSeatProjection();
+}
+
+// =============================================================================
+// SEAT PROJECTION: HELPERS
+// =============================================================================
+
+/**
+ * Maps a party name string (from the incumbency sheet) to a PARTIES key.
+ * Returns null if unrecognised (independent / other).
+ */
+function normaliseParty(name) {
+  if (!name) return null;
+  const lc = name.toLowerCase().trim();
+  if (lc.includes('snp') || lc.includes('national'))  return 'snp';
+  if (lc.includes('conserv') || lc.includes('tory'))  return 'con';
+  if (lc.includes('labour'))                           return 'lab';
+  if (lc.includes('lib')  || lc.includes('liberal'))  return 'lib';
+  if (lc.includes('alba'))                             return 'alba';
+  if (lc.includes('reform'))                           return 'rfm';
+  if (lc.includes('green'))                            return 'grn';
+  return null;
+}
+
+/**
+ * D'Hondt allocator for the Additional Member System.
+ *
+ * In AMS each party's list vote is divided by their TOTAL seats
+ * (constituency already won + list seats awarded so far) + 1.
+ * This naturally compensates parties that sweep constituency seats.
+ *
+ * @param {Object} listVotes   – { partyKey: listVoteSharePercent }
+ * @param {Object} constWins   – { partyKey: constituencySeatsWonInThisRegion }
+ * @param {number} numSeats    – number of list seats to allocate (7 per SP region)
+ * @returns {Object}           – { partyKey: listSeatsWon }
+ */
+function runDHondtAMS(listVotes, constWins, numSeats) {
+  const parties = Object.keys(listVotes).filter(k => (listVotes[k] || 0) > 0);
+  const listWon = {};
+  parties.forEach(k => listWon[k] = 0);
+
+  // Initial quotient = listVote / (constWins + 1)
+  const quotients = {};
+  parties.forEach(k => quotients[k] = listVotes[k] / ((constWins[k] || 0) + 1));
+
+  for (let i = 0; i < numSeats; i++) {
+    if (!parties.length) break;
+    const winner = parties.reduce((a, b) => quotients[a] > quotients[b] ? a : b);
+    listWon[winner]++;
+    // Re-divide by TOTAL seats (const + list so far) + 1
+    const totalSeats = listWon[winner] + (constWins[winner] || 0);
+    quotients[winner] = listVotes[winner] / (totalSeats + 1);
+  }
+  return listWon;
+}
+
+// =============================================================================
+// SEAT PROJECTION: COMPUTE
+// =============================================================================
+
+/**
+ * Seat projection using R poststratification output.
+ * Reads constituency-level vote share estimates from postratData JSON,
+ * determines constituency winners, then runs D'Hondt per region for list seats.
+ */
+function computeProjectionPostrat() {
+  const listAvg = computeAverage(listPolls);
+  if (!listAvg) return null;
+
+  const constByRegion = {};
+  const constituencies = postratData.constituencies;
+
+  // Build a quick lookup: constituency name → region (from incumbency sheet)
+  const constToRegion = {};
+  incumbency.forEach(row => {
+    constToRegion[row.constituency.toLowerCase().trim()] = row.region;
+  });
+
+  // Tally constituency wins by region using R-estimated vote shares
+  Object.entries(constituencies).forEach(([constName, shares]) => {
+    const region = constToRegion[constName.toLowerCase().trim()] || 'Unknown';
+    if (!constByRegion[region]) {
+      constByRegion[region] = {};
+      PARTIES.forEach(p => constByRegion[region][p.key] = 0);
+    }
+    const winner = shares.projected_winner;
+    if (winner && constByRegion[region][winner] !== undefined) {
+      constByRegion[region][winner]++;
+    }
+  });
+
+  // D'Hondt list per region (same as UNS path)
+  const listVotesNational = {};
+  PARTIES.forEach(p => listVotesNational[p.key] = listAvg[p.key] || 0);
+
+  const totalConst = {}, totalList = {};
+  PARTIES.forEach(p => { totalConst[p.key] = 0; totalList[p.key] = 0; });
+
+  // Swing vs 2021 (informational — use national polling averages)
+  const constAvg = computeAverage(constPolls);
+  const cSwing = {}, lSwing = {};
+  PARTIES.forEach(p => {
+    cSwing[p.key] = constAvg ? (constAvg[p.key] || 0) - (BASELINES_2021.constituency[p.key] || 0) : 0;
+    lSwing[p.key] = (listAvg[p.key] || 0) - (BASELINES_2021.list[p.key] || 0);
+  });
+
+  const regionBreakdown = {};
+  Object.keys(constByRegion).forEach(region => {
+    const cWins = constByRegion[region];
+    const lWins = runDHondtAMS(listVotesNational, cWins, 7);
+    regionBreakdown[region] = { constituency: { ...cWins }, list: { ...lWins } };
+    PARTIES.forEach(p => {
+      totalConst[p.key] += cWins[p.key] || 0;
+      totalList[p.key]  += lWins[p.key] || 0;
+    });
+  });
+
+  const total = {};
+  PARTIES.forEach(p => total[p.key] = (totalConst[p.key] || 0) + (totalList[p.key] || 0));
+
+  return {
+    constituency: totalConst, list: totalList, total,
+    regionBreakdown,
+    swing: { constituency: cSwing, list: lSwing },
+    pollsterSources: constAvg ? constAvg._sources : ['Postrat (R)'],
+    latestDates: constAvg ? constAvg._latestDates : [postratData.meta?.generated?.slice(0,10) || '—'],
+    totalProjected: PARTIES.reduce((s, p) => s + total[p.key], 0),
+    constCovered: Object.keys(constituencies).length,
+    listCovered: Object.keys(constByRegion).length,
+    isPostrat: true,
+  };
+}
+
+function computeProjection() {
+  // ── Postrat path (R output) ───────────────────────────────────────────────
+  if (usePostrat && postratData && postratData.constituencies) {
+    return computeProjectionPostrat();
+  }
+  // ── UNS path (default) ───────────────────────────────────────────────────
+  const constAvg = computeAverage(constPolls);
+  const listAvg  = computeAverage(listPolls);
+  if (!constAvg || !listAvg) return null;
+  if (!incumbency.length) return null;
+
+  // 1. Swing from 2021 baselines
+  const cSwing = {}, lSwing = {};
+  PARTIES.forEach(p => {
+    cSwing[p.key] = (constAvg[p.key] || 0) - (BASELINES_2021.constituency[p.key] || 0);
+    lSwing[p.key] = (listAvg[p.key]  || 0) - (BASELINES_2021.list[p.key] || 0);
+  });
+
+  // 2. Project constituency results by region using UNS
+  const constByRegion = {};
+
+  incumbency.forEach(seat => {
+    const region = seat.region || 'Unknown';
+    if (!constByRegion[region]) {
+      constByRegion[region] = {};
+      PARTIES.forEach(p => constByRegion[region][p.key] = 0);
+    }
+
+    const wKey = normaliseParty(seat.winnerParty);
+    const rKey = normaliseParty(seat.runnerUpParty);
+    if (!wKey) return; // skip if winner party unrecognised
+
+    // Parse vote share and majority; guard against raw vote counts (>50)
+    const wShare = parseFloat(String(seat.voteShare).replace('%','')) || 50;
+    const rawMaj = parseFloat(String(seat.majority).replace('%',''))  || 5;
+    const maj    = (rawMaj > 0 && rawMaj <= 50) ? rawMaj : 10; // if >50, likely raw votes — use 10pp fallback
+    const rShare = Math.max(0, wShare - maj);
+
+    // Apply national swing to each candidate's estimated share
+    const projW = wShare + (cSwing[wKey] || 0);
+    const projR = rKey   ? rShare + (cSwing[rKey] || 0) : -999;
+
+    const winner = projW >= projR ? wKey : rKey;
+    if (winner && constByRegion[region][winner] !== undefined) {
+      constByRegion[region][winner]++;
+    }
+  });
+
+  // 3. D'Hondt per region (7 list seats each)
+  const listVotesNational = {};
+  PARTIES.forEach(p => listVotesNational[p.key] = listAvg[p.key] || 0);
+
+  const totalConst = {}, totalList = {};
+  PARTIES.forEach(p => { totalConst[p.key] = 0; totalList[p.key] = 0; });
+
+  const regionBreakdown = {};
+  Object.keys(constByRegion).forEach(region => {
+    const cWins = constByRegion[region];
+    const lWins = runDHondtAMS(listVotesNational, cWins, 7);
+    regionBreakdown[region] = { constituency: { ...cWins }, list: { ...lWins } };
+    PARTIES.forEach(p => {
+      totalConst[p.key] += cWins[p.key] || 0;
+      totalList[p.key]  += lWins[p.key] || 0;
+    });
+  });
+
+  const total = {};
+  PARTIES.forEach(p => total[p.key] = (totalConst[p.key] || 0) + (totalList[p.key] || 0));
+
+  const totalProjected = PARTIES.reduce((s, p) => s + total[p.key], 0);
+
+  return {
+    constituency: totalConst,
+    list: totalList,
+    total,
+    regionBreakdown,
+    swing: { constituency: cSwing, list: lSwing },
+    pollsterSources: constAvg._sources,
+    latestDates: constAvg._latestDates,
+    totalProjected,
+    constCovered: incumbency.length,
+    listCovered: Object.keys(constByRegion).length,
+  };
+}
+
+// =============================================================================
+// SEAT PROJECTION: HEMICYCLE SVG
+// Seats arranged in 6 concentric arcs, left-to-right in political order.
+// Row seat counts: 11 + 17 + 21 + 24 + 27 + 29 = 129
+// =============================================================================
+
+function renderHemicycle(proj) {
+  const ROWS  = [11, 17, 21, 24, 27, 29];
+  const RADII = [65, 95, 125, 155, 185, 215];
+  const W = 520, H = 240, cx = W / 2, cy = 230;
+
+  // Build ordered seat array (politically left to right)
+  const seatArr = [];
+  SEAT_ORDER_LR.forEach(key => {
+    const party = PARTIES.find(p => p.key === key);
+    const n = proj.total[key] || 0;
+    for (let i = 0; i < n; i++) seatArr.push({ color: party.color, label: party.label });
+  });
+
+  let circles = '';
+  let si = 0;
+  ROWS.forEach((count, ri) => {
+    const r = RADII[ri];
+    for (let i = 0; i < count; i++) {
+      if (si >= seatArr.length) break;
+      // angle goes 0 (left) → π (right)
+      const angle = Math.PI * (i + 0.5) / count;
+      const x = (cx - r * Math.cos(angle)).toFixed(1);
+      const y = (cy - r * Math.sin(angle)).toFixed(1);
+      const s = seatArr[si++];
+      circles += `<circle cx="${x}" cy="${y}" r="4.5" fill="${s.color}" opacity="0.88">` +
+                 `<title>${s.label}</title></circle>`;
+    }
+  });
+
+  // Majority line (vertical, at horizontal centre)
+  const majLine = `
+    <line x1="${cx}" y1="${cy + 2}" x2="${cx}" y2="${cy - RADII[5] - 14}"
+          stroke="#f0c04066" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="${cx + 5}" y="${cy - RADII[5] - 17}" fill="#f0c040"
+          font-size="8.5" font-family="IBM Plex Mono" opacity="0.8">65 — majority</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+    style="width:100%;max-width:560px;display:block;margin:0 auto">
+    ${circles}${majLine}
+  </svg>`;
+}
+
+// =============================================================================
+// SEAT PROJECTION: PROPORTIONAL SEAT BAR
+// =============================================================================
+
+function renderSeatBar(proj) {
+  const wrap = document.getElementById('seatBarWrap');
+  if (!wrap) return;
+  const total = 129;
+
+  const segs = SEAT_ORDER_LR.map(key => {
+    const party = PARTIES.find(p => p.key === key);
+    const n = proj.total[key] || 0;
+    if (!n) return '';
+    return `<div class="seat-bar-seg" style="width:${(n/total*100).toFixed(2)}%;background:${party.color}"
+                 title="${party.label}: ${n} seats"></div>`;
+  }).join('');
+
+  const majPct = (65 / 129 * 100).toFixed(3);
+
+  wrap.innerHTML = `
+    <div class="seat-bar-outer">
+      <div class="seat-bar-maj-label" style="left:${majPct}%">65</div>
+      <div class="seat-bar">${segs}</div>
+      <div class="seat-bar-maj-line" style="left:${majPct}%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;
+         font-family:'IBM Plex Mono',monospace;font-size:0.56rem;color:var(--text-dim)">
+      <span>← left</span><span>right →</span>
+    </div>`;
+}
+
+// =============================================================================
+// SEAT PROJECTION: HORIZONTAL BAR CHARTS (constituency / list breakdown)
+// =============================================================================
+
+function renderSeatBars(seats, containerId, outOf) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const maxN = Math.max(1, ...PARTIES.map(p => seats[p.key] || 0));
+
+  el.innerHTML = PARTIES
+    .filter(p => (seats[p.key] || 0) > 0)
+    .sort((a, b) => (seats[b.key] || 0) - (seats[a.key] || 0))
+    .map(p => {
+      const n = seats[p.key] || 0;
+      const barW = (n / maxN * 100).toFixed(1);
+      return `<div class="horiz-bar-row">
+        <div class="horiz-bar-name" style="color:${p.color}">${p.label}</div>
+        <div class="horiz-bar-track">
+          <div class="horiz-bar-fill" style="width:${barW}%;background:${p.color}55">
+            <span class="horiz-bar-n" style="color:${p.color}">${n}</span>
+          </div>
+        </div>
+        <div class="horiz-bar-pct">${(n / outOf * 100).toFixed(0)}%</div>
+      </div>`;
+    }).join('');
+}
+
+// =============================================================================
+// SEAT PROJECTION: SWING GRID
+// =============================================================================
+
+function renderSwingGrid(swing) {
+  const el = document.getElementById('swingGrid');
+  if (!el) return;
+
+  el.innerHTML = PARTIES.map(p => {
+    const cs = swing.constituency[p.key] || 0;
+    const ls = swing.list[p.key] || 0;
+    // Show constituency swing as the primary figure
+    const val = cs;
+    const cls = val > 0.3 ? 'swing-pos' : val < -0.3 ? 'swing-neg' : 'swing-neu';
+    const sign = val > 0 ? '+' : '';
+    return `<div class="swing-chip">
+      <div class="swing-chip-party" style="color:${p.color}">${p.label}</div>
+      <div class="swing-chip-val ${cls}">${sign}${val.toFixed(1)}</div>
+      <div class="swing-chip-type">const pp</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.54rem;color:var(--text-dim);margin-top:3px">
+        list ${ls > 0 ? '+' : ''}${ls.toFixed(1)}pp
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =============================================================================
+// SEAT PROJECTION: REGION TABLE
+// =============================================================================
+
+function renderRegionTable(breakdown) {
+  const tbody = document.getElementById('regionTableBody');
+  const tfoot = document.getElementById('regionTableFoot');
+  if (!tbody) return;
+
+  const regions = Object.keys(breakdown).sort();
+  // Region-level rendering — only show SEAT_ORDER_LR keys for column order
+  const colOrder = SEAT_ORDER_LR; // grn, alba, snp, lib, lab, con, rfm
+
+  const partyByKey = {};
+  PARTIES.forEach(p => partyByKey[p.key] = p);
+
+  // Grand totals
+  const grand = {};
+  colOrder.forEach(k => grand[k] = 0);
+  regions.forEach(r => {
+    const { constituency: c, list: l } = breakdown[r];
+    colOrder.forEach(k => grand[k] += (c[k] || 0) + (l[k] || 0));
+  });
+  const grandTotal = colOrder.reduce((s, k) => s + grand[k], 0);
+
+  tbody.innerHTML = regions.map(region => {
+    const { constituency: c, list: l } = breakdown[region];
+    const regionTotal = colOrder.reduce((s, k) => s + (c[k]||0) + (l[k]||0), 0);
+    return `<tr>
+      <td class="rname">${region}</td>
+      ${colOrder.map(k => {
+        const tc = c[k] || 0, tl = l[k] || 0, tot = tc + tl;
+        const party = partyByKey[k];
+        return tot > 0
+          ? `<td style="color:${party.color}">${tot}<span style="font-size:0.54rem;color:var(--text-dim);margin-left:2px">(${tc}C+${tl}L)</span></td>`
+          : `<td style="color:var(--text-dim)">—</td>`;
+      }).join('')}
+      <td style="color:var(--text-muted)">${regionTotal}</td>
+    </tr>`;
+  }).join('');
+
+  tfoot.innerHTML = `<tr>
+    <td class="rname" style="color:var(--text)">Total</td>
+    ${colOrder.map(k => {
+      const party = partyByKey[k];
+      return grand[k] > 0
+        ? `<td style="color:${party.color};font-weight:500">${grand[k]}</td>`
+        : `<td style="color:var(--text-dim)">0</td>`;
+    }).join('')}
+    <td style="color:var(--text-muted);font-weight:500">${grandTotal}</td>
+  </tr>`;
+}
+
+// =============================================================================
+// SEAT PROJECTION: MAIN RENDER
+// =============================================================================
+
+function renderSeatProjection() {
+  const proj = computeProjection();
+
+  if (!proj) {
+    document.getElementById('mrpSeatsStrip').innerHTML =
+      `<div class="empty-state" style="grid-column:1/-1;padding:28px">
+         Load polling data first — click ↻ Refresh
+       </div>`;
+    return;
+  }
+
+  // Source attribution
+  const srcText = proj.pollsterSources.map((s, i) => `${s} (${proj.latestDates[i]})`).join(' · ');
+  const srcEl = document.getElementById('mrpSources');
+  if (srcEl) srcEl.textContent = srcText;
+
+  // Seat strip with delta vs 2021
+  document.getElementById('mrpSeatsStrip').innerHTML = PARTIES.map(p => {
+    const tot  = proj.total[p.key] || 0;
+    const c    = proj.constituency[p.key] || 0;
+    const l    = proj.list[p.key] || 0;
+    const ref  = BASELINES_2021.seats[p.key] || 0;
+    const diff = tot - ref;
+    const diffStr = diff > 0 ? `+${diff}` : diff === 0 ? '±0' : `${diff}`;
+    const diffCol = diff > 0 ? '#4ade80' : diff < 0 ? '#f87171' : 'var(--text-dim)';
+    return `<div class="mrp-seat-chip">
+      <div class="party-dot" style="background:${p.color};margin:0 auto 6px"></div>
+      <div class="mrp-seat-total" style="color:${p.color}">${tot}</div>
+      <div class="mrp-seat-delta" style="color:${diffCol}">${diffStr} vs 2021</div>
+      <div class="mrp-seat-label">${p.label}</div>
+      <div class="mrp-seat-split">${c}C · ${l}L</div>
+    </div>`;
+  }).join('');
+
+  // Majority indicator note
+  const largestParty = PARTIES.slice().sort((a, b) => (proj.total[b.key]||0) - (proj.total[a.key]||0))[0];
+  const largest = proj.total[largestParty.key] || 0;
+  const majNote = largest >= 65
+    ? `<span style="color:#4ade80">${largestParty.label} projected majority (${largest} seats)</span>`
+    : `<span style="color:#f87171">No party projected to majority · largest: ${largestParty.label} ${largest} seats · ${65 - largest} short</span>`;
+  document.getElementById('mrpMajNote').innerHTML = majNote + ` · ${proj.constCovered} constituencies covered`;
+
+  // Proportional seat bar
+  renderSeatBar(proj);
+
+  // Hemicycle
+  const hemEl = document.getElementById('hemicycleWrap');
+  if (hemEl) hemEl.innerHTML = renderHemicycle(proj);
+
+  // Split bar charts
+  renderSeatBars(proj.constituency, 'constSeatsBars', proj.constCovered || 73);
+  renderSeatBars(proj.list, 'listSeatsBars', proj.listCovered * 7 || 56);
+
+  // Swing grid
+  renderSwingGrid(proj.swing);
+
+  // Coverage note
+  const covEl = document.getElementById('mrpCoverageNote');
+  if (covEl) covEl.textContent =
+    `${proj.constCovered} constituencies · ${proj.listCovered} regions · ` +
+    `${proj.totalProjected} seats projected (${129 - proj.totalProjected} unallocated — unrecognised parties or missing data)`;
+
+  // Region table
+  renderRegionTable(proj.regionBreakdown);
+}
+
+// =============================================================================
+// RENDER (all tabs)
 // =============================================================================
 
 function render() {
@@ -901,6 +1518,10 @@ function render() {
   renderPollsterCards(listPolls,  'listPollsterCards');
   renderRawTables();
   renderIncumbency();
+  // Only render seat projection if that tab is currently visible
+  if (document.getElementById('tab-mrp').classList.contains('active')) {
+    renderSeatProjection();
+  }
 }
 
 // =============================================================================

@@ -318,6 +318,15 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
     </div>
     <div class="seat-maj-note" id="majNote">—</div>
 
+    <!-- AMS note: explains why SNP gets few/no list seats -->
+    <div id="amsNote" style="display:none;font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:var(--text-dim);
+         background:var(--bg2);border:1px solid var(--border);padding:10px 14px;margin-bottom:20px;line-height:1.7">
+      <span style="color:var(--accent)">AMS list suppression · </span>
+      Under the Additional Member System, parties that sweep constituency seats receive a much lower D'Hondt
+      quotient on the list (list vote ÷ constituency seats won + 1). The SNP won only 2 list seats in 2021
+      despite winning 62 constituencies — this is the system working as designed.
+    </div>
+
     <div id="seatBarWrap" style="margin-bottom:32px"></div>
 
     <div class="charts-grid" style="margin-bottom:24px">
@@ -430,7 +439,7 @@ const POLLSTER_COLORS = { Survation:'#a78bfa', Norstat:'#fb923c', Ipsos:'#38bdf8
 const BASELINES_2021 = {
   constituency: { con:22.2, lab:21.6, lib:7.9, snp:47.7, alba:0.2, rfm:0.0, grn:0.6, oth:0.0 },
   list:         { con:23.5, lab:17.9, lib:5.2, snp:40.3, alba:1.7, rfm:0.0, grn:6.6 },
-  seats:        { con:31,   lab:22,   lib:4,   snp:64,   alba:0,   rfm:0,   grn:8   },
+  seats:        { con:31,   lab:22,   lib:5,   snp:64,   alba:0,   rfm:0,   grn:7   },
 };
 
 // =============================================================================
@@ -843,19 +852,58 @@ function computeUNS(){
     cSwing[p.key]=(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0);
     lSwing[p.key]=(listAvg[p.key]||0)-(BASELINES_2021.list[p.key]||0);
   });
+
+  // Work out which party is the top national challenger (for seats with no runner-up data)
+  const nationalChallenger = PARTIES
+    .filter(p => constAvg[p.key] !== null)
+    .sort((a,b) => (constAvg[b.key]||0) - (constAvg[a.key]||0))
+    .map(p => p.key);
+
   const cbr={};
   incumbency.forEach(seat=>{
     const region=seat.region||'Unknown';
     if(!cbr[region]){cbr[region]={};PARTIES.forEach(p=>cbr[region][p.key]=0);}
-    const wKey=normaliseParty(seat.winnerParty),rKey=normaliseParty(seat.runnerUpParty);
+    const wKey=normaliseParty(seat.winnerParty);
     if(!wKey)return;
-    const wShare=parseFloat(String(seat.voteShare).replace('%',''))||50;
-    const rawMaj=parseFloat(String(seat.majority).replace('%',''))||5;
-    const maj=(rawMaj>0&&rawMaj<=50)?rawMaj:10;
-    const rShare=Math.max(0,wShare-maj);
-    const projW=wShare+(cSwing[wKey]||0),projR=rKey?rShare+(cSwing[rKey]||0):-999;
-    const winner=projW>=projR?wKey:rKey;
-    if(winner&&cbr[region][winner]!==undefined)cbr[region][winner]++;
+
+    // Winner's vote share — stored as e.g. "47.7" or "47.7%"
+    const wShare=parseFloat(String(seat.voteShare).replace(/[%,]/g,''))||null;
+    if(!wShare||wShare<=0){
+      // No usable vote share data — hold current winner
+      cbr[region][wKey]++;
+      return;
+    }
+
+    // Majority — strip commas before parsing (e.g. "5,234" → 5234)
+    const rawMaj=parseFloat(String(seat.majority).replace(/[%,]/g,''))||null;
+
+    // Convert to percentage-point margin.
+    // If rawMaj ≤ 50 it's already in pp. If > 50 it's a raw vote count —
+    // estimate the pp margin from the winner's dominance.
+    let marginPp;
+    if(rawMaj && rawMaj > 0 && rawMaj <= 50) {
+      marginPp = rawMaj;
+    } else if(rawMaj && rawMaj > 50) {
+      // Raw vote count — estimate margin from winner's share
+      // (Safe seats won with 60%+ typically have ~20-25pp margins;
+      //  tight seats won with ~45% typically have ~3-8pp margins)
+      marginPp = wShare >= 60 ? 22 : wShare >= 55 ? 16 : wShare >= 50 ? 10 : wShare >= 45 ? 6 : 4;
+    } else {
+      // No data — moderate assumption based on winner's share
+      marginPp = wShare >= 55 ? 15 : wShare >= 48 ? 8 : 5;
+    }
+
+    const rShare = Math.max(0, wShare - marginPp);
+
+    // Runner-up party — fall back to top national challenger that isn't the winner
+    let rKey = normaliseParty(seat.runnerUpParty);
+    if(!rKey) rKey = nationalChallenger.find(k => k !== wKey) || null;
+
+    const projW = wShare + (cSwing[wKey]||0);
+    const projR = rKey ? rShare + (cSwing[rKey]||0) : rShare; // no swing adjustment if truly unknown
+
+    const winner = projW >= projR ? wKey : rKey;
+    if(winner && cbr[region][winner] !== undefined) cbr[region][winner]++;
   });
   return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);
 }
@@ -1055,6 +1103,10 @@ function renderSeatProjection(){
   const hemEl=document.getElementById('hemicycleWrap');if(hemEl)hemEl.innerHTML=renderHemicycle(proj);
   renderHorizBars(proj.constituency,'constSeatsBars',proj.constCovered||73);
   renderHorizBars(proj.list,'listSeatsBars',proj.listCovered*7||56);
+
+  // Show AMS suppression note if SNP gets very few list seats
+  const amsNote=document.getElementById('amsNote');
+  if(amsNote) amsNote.style.display=(proj.list['snp']||0)<3?'block':'none';
   renderSwingGrid(proj.swing);
   renderFlips(proj);
 

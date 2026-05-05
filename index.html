@@ -367,14 +367,13 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
           <th>Region</th>
           <th style="color:var(--grn)">Green</th>
           <th style="color:var(--snp)">SNP</th>
-          <th style="color:var(--alba)">Alba</th>
           <th style="color:var(--lib)">Lib Dem</th>
           <th style="color:var(--lab)">Labour</th>
           <th style="color:var(--con)">Con</th>
           <th style="color:var(--rfm)">Reform</th>
           <th>Total</th>
         </tr></thead>
-        <tbody id="rgTableBody"><tr><td colspan="9" class="empty-state">Awaiting data…</td></tr></tbody>
+        <tbody id="rgTableBody"><tr><td colspan="8" class="empty-state">Awaiting data…</td></tr></tbody>
         <tfoot id="rgTableFoot"></tfoot>
       </table>
     </div>
@@ -434,7 +433,9 @@ const PARTIES = [
   { key:'rfm',  label:'Reform',  color:'#12B6CF' },
   { key:'grn',  label:'Green',   color:'#00B140' },
 ];
-const LR_ORDER = ['grn','alba','snp','lib','lab','con','rfm'];
+const LR_ORDER = ['grn','snp','lib','lab','con','rfm'];
+// Alba deregistered as a party in 2026 — excluded from seat projections but kept in polling
+const SEAT_PARTIES = PARTIES.filter(p => p.key !== 'alba');
 const POLLSTER_COLORS = { Survation:'#a78bfa', Norstat:'#fb923c', Ipsos:'#38bdf8' };
 const BASELINES_2021 = {
   constituency: { con:22.2, lab:21.6, lib:7.9, snp:47.7, alba:0.2, rfm:0.0, grn:0.6, oth:0.0 },
@@ -992,7 +993,7 @@ function renderHorizBars(seats,containerId,outOf){
 
 function renderSwingGrid(swing){
   const el=document.getElementById('swingGrid');if(!el)return;
-  el.innerHTML=PARTIES.map(p=>{const cs=swing.constituency[p.key]||0,ls=swing.list[p.key]||0;
+  el.innerHTML=SEAT_PARTIES.map(p=>{const cs=swing.constituency[p.key]||0,ls=swing.list[p.key]||0;
     const cls=cs>0.3?'s-pos':cs<-0.3?'s-neg':'s-neu';const sign=cs>0?'+':'';
     return`<div class="swing-chip">
       <div class="swing-chip-party" style="color:${p.color}">${p.label}</div>
@@ -1048,8 +1049,8 @@ function renderRegionTable(breakdown){
   const tbody=document.getElementById('rgTableBody'),tfoot=document.getElementById('rgTableFoot');
   if(!tbody)return;
   const regions=Object.keys(breakdown).sort();
-  const cols=['grn','alba','snp','lib','lab','con','rfm'];
-  const pByKey={};PARTIES.forEach(p=>pByKey[p.key]=p);
+  const cols=['grn','snp','lib','lab','con','rfm'];  // Alba excluded — deregistered 2026
+  const pByKey={};SEAT_PARTIES.forEach(p=>pByKey[p.key]=p);
   const grand={};cols.forEach(k=>grand[k]=0);
   regions.forEach(r=>{const{constituency:c,list:l}=breakdown[r];cols.forEach(k=>grand[k]+=(c[k]||0)+(l[k]||0));});
   const gTotal=cols.reduce((s,k)=>s+grand[k],0);
@@ -1079,17 +1080,21 @@ function renderSeatProjection(){
   if(srcEl)srcEl.textContent=proj.pollsterSources.map((s,i)=>`${s} (${proj.latestDates[i]})`).join(' · ');
 
   // Seat strip
-  document.getElementById('seatStrip').innerHTML=PARTIES.map(p=>{
+  document.getElementById('seatStrip').innerHTML=SEAT_PARTIES.map(p=>{
     const tot=proj.total[p.key]||0,c=proj.constituency[p.key]||0,l=proj.list[p.key]||0;
     const ref=BASELINES_2021.seats[p.key]||0,diff=tot-ref;
     const diffStr=diff>0?`+${diff}`:diff===0?'±0':`${diff}`;
     const diffCol=diff>0?'#4ade80':diff<0?'#f87171':'var(--text-dim)';
+    // SNP list suppression note
+    const snpNote=(p.key==='snp'&&l===0)
+      ?`<div style="font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--text-dim);margin-top:3px;line-height:1.3">0 list seats<br>AMS suppression</div>`:'';
     return`<div class="seat-chip">
       <div class="party-dot" style="background:${p.color}"></div>
       <div class="seat-total" style="color:${p.color}">${tot}</div>
       <div class="seat-delta" style="color:${diffCol}">${diffStr} vs 2021</div>
       <div class="seat-label">${p.label}</div>
       <div class="seat-split">${c}C · ${l}L</div>
+      ${snpNote}
     </div>`;}).join('');
 
   // Majority note

@@ -422,10 +422,11 @@ const SOURCES = {
   // Manual list vote override for D'Hondt — calibrated against YouGov MRP (Apr 2026).
   // Auto-loaded list polls over-allocate Green/Con due to same column parsing issues.
   // Set to null to use auto-loaded averages.
-  list_vote_override: { snp:36, lab:21, con:10, lib:8, rfm:18, grn:7, alba:1 },
+  list_vote_override: { snp:36, lab:16, con:10, lib:8, rfm:20, grn:10, alba:1 },
   // SNP safe-seat floor: SNP hold any seat where their projected share stays above this.
   // Recovers ~7 seats lost to UNS boundary-change artefacts. Set to 0 to disable.
-  snp_floor_pct: 38,
+  snp_swing_damp: 0.75,
+  snp_floor_pct: 32,
 };
 
 // =============================================================================
@@ -907,7 +908,10 @@ function computeUNS(){
     let rKey = normaliseParty(seat.runnerUpParty);
     if(!rKey) rKey = nationalChallenger.find(k => k !== wKey) || null;
 
-    const projW = wShare + (cSwing[wKey]||0);
+    // Apply SNP swing dampener — SNP takes only a fraction of the national swing
+    // to reflect geographic concentration of their support (UNS overstates their losses)
+    const snpDamp = (wKey==='snp' && SOURCES.snp_swing_damp) ? SOURCES.snp_swing_damp : 1;
+    const projW = wShare + (cSwing[wKey]||0) * snpDamp;
     const projR = rKey ? rShare + (cSwing[rKey]||0) : rShare;
 
     // SNP safe-seat floor — if SNP is the incumbent and still projects above the

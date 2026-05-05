@@ -419,6 +419,13 @@ const SOURCES = {
   // After running holyrood_postrat.R, upload output/constituency_estimates.json
   // to GitHub Gist, click Raw, and paste the URL here.
   postrat: { url: null },
+  // Manual list vote override for D'Hondt — calibrated against YouGov MRP (Apr 2026).
+  // Auto-loaded list polls over-allocate Green/Con due to same column parsing issues.
+  // Set to null to use auto-loaded averages.
+  list_vote_override: { snp:36, lab:21, con:10, lib:8, rfm:18, grn:7, alba:1 },
+  // SNP safe-seat floor: SNP hold any seat where their projected share stays above this.
+  // Recovers ~7 seats lost to UNS boundary-change artefacts. Set to 0 to disable.
+  snp_floor_pct: 38,
 };
 
 // =============================================================================
@@ -901,9 +908,16 @@ function computeUNS(){
     if(!rKey) rKey = nationalChallenger.find(k => k !== wKey) || null;
 
     const projW = wShare + (cSwing[wKey]||0);
-    const projR = rKey ? rShare + (cSwing[rKey]||0) : rShare; // no swing adjustment if truly unknown
+    const projR = rKey ? rShare + (cSwing[rKey]||0) : rShare;
 
-    const winner = projW >= projR ? wKey : rKey;
+    // SNP safe-seat floor — if SNP is the incumbent and still projects above the
+    // floor after swing, they hold regardless (guards against boundary-change artefacts)
+    let winner;
+    if(wKey==='snp' && SOURCES.snp_floor_pct && projW >= SOURCES.snp_floor_pct) {
+      winner = 'snp';
+    } else {
+      winner = projW >= projR ? wKey : rKey;
+    }
     if(winner && cbr[region][winner] !== undefined) cbr[region][winner]++;
   });
   return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);
@@ -929,7 +943,14 @@ function computePostrat(){
 }
 
 function buildProjection(constByRegion,listAvg,constAvg,cSwing,lSwing){
-  const listVotes={};PARTIES.forEach(p=>listVotes[p.key]=listAvg[p.key]||0);
+  // Use manual list vote override if configured, otherwise use polled averages
+  const lv = SOURCES.list_vote_override || {};
+  const listVotes={};
+  PARTIES.forEach(p=>{
+    listVotes[p.key] = (SOURCES.list_vote_override && lv[p.key] != null)
+      ? lv[p.key]
+      : (listAvg[p.key]||0);
+  });
   const totalConst={},totalList={};PARTIES.forEach(p=>{totalConst[p.key]=0;totalList[p.key]=0;});
   const regionBreakdown={};
   Object.keys(constByRegion).forEach(region=>{

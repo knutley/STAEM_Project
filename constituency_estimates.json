@@ -1,14 +1,13 @@
 {
   "meta": {
-    "generated": "2026-05-05T08:48:41Z",
+    "generated": "2026-05-05T08:53:13Z",
     "method": "Additive swing with demographic adjustment",
-    "method_note": "NOT full MRP. Starts from 2021 constituency results (CBP9230), applies additive national polling swing, then adjusts each constituency by its NRS Census 2022 age×sex demographic profile via marginal poststratification. National polling averages from dashboard headline strip (MANUAL_NATIONAL_POLL).",
+    "method_note": "NOT full MRP. Starts from 2021 constituency results (CBP9230), applies additive national polling swing, then adjusts each constituency by its NRS Census 2022 age\u00d7sex demographic profile via marginal poststratification. National polling averages from dashboard headline strip (MANUAL_NATIONAL_POLL). Five constituencies manually corrected (Kilmarnock, Galloway, Greenock, Clackmannanshire, Glasgow Maryhill) where LibDem demographic ratios produced implausible estimates.",
     "nrs_year": "2021",
     "constituencies": 73,
     "seats_summary": {
-      "snp": 60,
-      "con": 5,
-      "lib": 5,
+      "snp": 64,
+      "con": 6,
       "lab": 3
     }
   },
@@ -158,16 +157,16 @@
       "winner_share": 35.61
     },
     "Glasgow Maryhill and Springburn": {
-      "snp": 33.57,
-      "con": 3.29,
-      "lab": 1.65,
-      "lib": 38.39,
-      "grn": 4.91,
-      "oth": 1.38,
-      "rfm": 16.81,
-      "alba": 0,
-      "projected_winner": "lib",
-      "winner_share": 38.39
+      "snp": 48.11,
+      "con": 0.0,
+      "lab": 26.08,
+      "lib": 4.63,
+      "grn": 4.78,
+      "rfm": 16.4,
+      "oth": 0.0,
+      "alba": 0.0,
+      "projected_winner": "snp",
+      "winner_share": 48.11
     },
     "Glasgow Pollok": {
       "snp": 33.22,
@@ -434,16 +433,16 @@
       "winner_share": 42.19
     },
     "Clackmannanshire and Dunblane": {
-      "snp": 22.81,
-      "con": 0,
-      "lab": 1.49,
-      "lib": 54.5,
-      "grn": 4.7,
-      "oth": 0.41,
-      "rfm": 16.09,
-      "alba": 0,
-      "projected_winner": "lib",
-      "winner_share": 54.5
+      "snp": 37.56,
+      "con": 15.12,
+      "lab": 19.93,
+      "lib": 5.69,
+      "grn": 4.9,
+      "rfm": 16.8,
+      "oth": 0.0,
+      "alba": 0.0,
+      "projected_winner": "snp",
+      "winner_share": 37.56
     },
     "Cowdenbeath": {
       "snp": 23,
@@ -734,28 +733,28 @@
       "winner_share": 41.86
     },
     "Galloway and West Dumfries": {
-      "snp": 25.39,
-      "con": 0,
-      "lab": 0,
-      "lib": 54.08,
-      "grn": 4.63,
-      "oth": 0,
-      "rfm": 15.9,
-      "alba": 0,
-      "projected_winner": "lib",
-      "winner_share": 54.08
+      "snp": 30.27,
+      "con": 36.52,
+      "lab": 4.08,
+      "lib": 4.82,
+      "grn": 7.51,
+      "rfm": 16.8,
+      "oth": 0.0,
+      "alba": 0.0,
+      "projected_winner": "con",
+      "winner_share": 36.52
     },
     "Kilmarnock and Irvine Valley": {
-      "snp": 18.42,
-      "con": 0,
-      "lab": 0,
-      "lib": 61.08,
-      "grn": 4.63,
-      "oth": 0,
-      "rfm": 15.87,
-      "alba": 0,
-      "projected_winner": "lib",
-      "winner_share": 61.08
+      "snp": 43.06,
+      "con": 9.92,
+      "lab": 20.17,
+      "lib": 4.53,
+      "grn": 4.9,
+      "rfm": 16.8,
+      "oth": 0.62,
+      "alba": 0.0,
+      "projected_winner": "snp",
+      "winner_share": 43.06
     },
     "Midlothian South, Tweeddale and Lauderdale": {
       "snp": 39.95,
@@ -830,16 +829,16 @@
       "winner_share": 40.25
     },
     "Greenock and Inverclyde": {
-      "snp": 30.25,
-      "con": 0,
-      "lab": 0,
-      "lib": 47.71,
-      "grn": 4.6,
-      "oth": 1.62,
-      "rfm": 15.82,
-      "alba": 0,
-      "projected_winner": "lib",
-      "winner_share": 47.71
+      "snp": 43.92,
+      "con": 0.0,
+      "lab": 27.54,
+      "lib": 5.04,
+      "grn": 4.83,
+      "rfm": 16.57,
+      "oth": 2.1,
+      "alba": 0.0,
+      "projected_winner": "snp",
+      "winner_share": 43.92
     },
     "Paisley": {
       "snp": 46.49,

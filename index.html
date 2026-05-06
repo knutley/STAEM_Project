@@ -273,9 +273,12 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
   <div class="tab-panel" id="tab-seats">
     <div class="sp-note" id="spNote">
       <span class="sp-note-label">Methodology · </span>
-      <strong>Uniform National Swing</strong> applied to each 2021 constituency result.
-      Regional list seats (7 per region) via <strong>D'Hondt AMS</strong> —
-      list vote divided by (seats won in region + 1), so constituency gains suppress list returns.
+      <strong>Full Uniform National Swing</strong> applied to each 2021 constituency result —
+      no party-specific dampening or vote-share floors.
+      All parties' projected shares are compared per seat; the highest wins.
+      Regional list seats (7 per region) via <strong>D'Hondt AMS</strong> using
+      actual polling averages — list vote ÷ (constituency seats won + 1), so
+      constituency gains suppress list returns.
       Polling average: <span id="spSources" style="color:var(--text)">—</span>.
       <span style="color:var(--text-dim)"> · Run holyrood_postrat.R and set SOURCES.postrat.url to enable demographic-adjusted mode.</span>
     </div>
@@ -439,77 +442,574 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
 </footer>
 
 <script>
-const SOURCES={constituency:[{name:'Survation',dotId:'dot-cs',stId:'st-cs',colDate:2,skipRows:1,filterUndecideds:true,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRVHoDYDQBczBB68faWVZ6fGRNqPSjlJj9-yTKLzJc6h7P1OT6HQiFvz8aXVSG-JH9fZrPoq3X1Bw1K/pub?output=csv'},{name:'Norstat',dotId:'dot-cn',stId:'st-cn',colDate:2,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvwlOJGWbsgeU-1El-ruiXk0bo6_6Cv231HFmABtu7y1yukxmI8lrFDTveP3XSUXy6lfZi-RQ5_mKb/pub?output=csv'},{name:'Ipsos',dotId:'dot-ci',stId:'st-ci',colDate:1,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSkkfZ99xen3Z3FVOwVnxoqY2JZhxkEzejwagwS4p1n1f8awbC453uv5yb-ydAsagXz108FC-efiuQ_/pub?output=csv'}],list:[{name:'Survation',dotId:'dot-ls',stId:'st-ls',colDate:2,skipRows:1,filterUndecideds:true,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7RAJi3HPG0Eu49vOIf8yBR-v2vue3lUkc-iCmat81k3fNP4SOL3gixDwRRc_bKTxQ_SOmS6qVNwfY/pub?output=csv'},{name:'Norstat',dotId:'dot-ln',stId:'st-ln',colDate:2,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQujNr-IGnS63Sp1zn-lGV-xlO8hfZRxsKHC1udfblPWpfliy7gYFNSt-sTB5dhlAlwodu0ng8Ex9R9/pub?output=csv'},{name:'Ipsos',dotId:'dot-li',stId:'st-li',colDate:1,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRKZ0skhiQDkOWJplehISh4YktsynvLoSHYvqizkckRD2E8_AzXE-x0cO_WbhZ0HlmMzRgVHCaZJUD/pub?output=csv'}],incumbency:{dotId:'dot-inc',stId:'st-inc',url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv'},postrat:{url:null},list_vote_override:{snp:36,lab:16,con:10,lib:8,rfm:20,grn:10,alba:1},snp_swing_damp:0.75,snp_floor_pct:32};
-const PARTIES=[{key:'con',label:'Con',color:'#0087DC'},{key:'lab',label:'Labour',color:'#E4003B'},{key:'lib',label:'Lib Dem',color:'#FAA61A'},{key:'snp',label:'SNP',color:'#FDF38E'},{key:'alba',label:'Alba',color:'#005EB8'},{key:'rfm',label:'Reform',color:'#12B6CF'},{key:'grn',label:'Green',color:'#00B140'}];
+// ─── SOURCES CONFIG ────────────────────────────────────────────────────────────
+// NOTE: list_vote_override, snp_swing_damp, and snp_floor_pct have been removed.
+// The projection now uses actual polling averages for list votes and applies
+// full, undamped uniform swing to all parties in every constituency.
+const SOURCES={
+  constituency:[
+    {name:'Survation',dotId:'dot-cs',stId:'st-cs',colDate:2,skipRows:1,filterUndecideds:true, url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRVHoDYDQBczBB68faWVZ6fGRNqPSjlJj9-yTKLzJc6h7P1OT6HQiFvz8aXVSG-JH9fZrPoq3X1Bw1K/pub?output=csv'},
+    {name:'Norstat', dotId:'dot-cn',stId:'st-cn',colDate:2,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvwlOJGWbsgeU-1El-ruiXk0bo6_6Cv231HFmABtu7y1yukxmI8lrFDTveP3XSUXy6lfZi-RQ5_mKb/pub?output=csv'},
+    {name:'Ipsos',   dotId:'dot-ci',stId:'st-ci',colDate:1,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSkkfZ99xen3Z3FVOwVnxoqY2JZhxkEzejwagwS4p1n1f8awbC453uv5yb-ydAsagXz108FC-efiuQ_/pub?output=csv'}
+  ],
+  list:[
+    {name:'Survation',dotId:'dot-ls',stId:'st-ls',colDate:2,skipRows:1,filterUndecideds:true, url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7RAJi3HPG0Eu49vOIf8yBR-v2vue3lUkc-iCmat81k3fNP4SOL3gixDwRRc_bKTxQ_SOmS6qVNwfY/pub?output=csv'},
+    {name:'Norstat', dotId:'dot-ln',stId:'st-ln',colDate:2,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQujNr-IGnS63Sp1zn-lGV-xlO8hfZRxsKHC1udfblPWpfliy7gYFNSt-sTB5dhlAlwodu0ng8Ex9R9/pub?output=csv'},
+    {name:'Ipsos',   dotId:'dot-li',stId:'st-li',colDate:1,skipRows:1,filterUndecideds:false,url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRKZ0skhiQDkOWJplehISh4YktsynvLoSHYvqizkckRD2E8_AzXE-x0cO_WbhZ0HlmMzRgVHCaZJUD/pub?output=csv'}
+  ],
+  incumbency:{dotId:'dot-inc',stId:'st-inc',url:'https://docs.google.com/spreadsheets/d/e/2PACX-1vTl6WYteXtuKhFCT5lgfE8HC9_QLjZi98emDf_pijvNjctmvHo3Xqr9av_mamvaA5i7HzS-D-JU_iol/pub?output=csv'},
+  postrat:{url:null}
+};
+
+const PARTIES=[
+  {key:'con', label:'Con',     color:'#0087DC'},
+  {key:'lab', label:'Labour',  color:'#E4003B'},
+  {key:'lib', label:'Lib Dem', color:'#FAA61A'},
+  {key:'snp', label:'SNP',     color:'#FDF38E'},
+  {key:'alba',label:'Alba',    color:'#005EB8'},
+  {key:'rfm', label:'Reform',  color:'#12B6CF'},
+  {key:'grn', label:'Green',   color:'#00B140'}
+];
 const LR_ORDER=['grn','snp','lib','lab','con','rfm'];
 const SEAT_PARTIES=PARTIES.filter(p=>p.key!=='alba');
 const POLLSTER_COLORS={Survation:'#a78bfa',Norstat:'#fb923c',Ipsos:'#38bdf8'};
-const BASELINES_2021={constituency:{con:22.2,lab:21.6,lib:7.9,snp:47.7,alba:0.2,rfm:0.0,grn:0.6,oth:0.0},list:{con:23.5,lab:17.9,lib:5.2,snp:40.3,alba:1.7,rfm:0.0,grn:6.6},seats:{con:31,lab:22,lib:5,snp:64,alba:0,rfm:0,grn:7}};
+
+// 2021 actual results (national %)
+const BASELINES_2021={
+  constituency:{con:22.2,lab:21.6,lib:7.9,snp:47.7,alba:0.2,rfm:0.0,grn:0.6,oth:0.0},
+  list:        {con:23.5,lab:17.9,lib:5.2,snp:40.3,alba:1.7,rfm:0.0,grn:6.6},
+  seats:       {con:31,  lab:22,  lib:5,  snp:64,  alba:0,  rfm:0,  grn:7}
+};
+
 let constPolls=[],listPolls=[],incumbency=[],postratData=null;
 let activePollsterFilter='all',activeRegion='all',usePostrat=false;
 
-function updateCountdown(){document.getElementById('daysLeft').textContent=Math.max(0,Math.ceil((new Date('2026-05-07')-new Date())/86400000));}
+// ─── COUNTDOWN ────────────────────────────────────────────────────────────────
+function updateCountdown(){
+  document.getElementById('daysLeft').textContent=
+    Math.max(0,Math.ceil((new Date('2026-05-07')-new Date())/86400000));
+}
 updateCountdown();setInterval(updateCountdown,3600000);
 
-function switchTab(name,btn){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-row > .tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');if(name==='seats')renderSeatProjection();}
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-row > .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='seats')renderSeatProjection();
+}
 
-function parseCSV(text,skip){return text.trim().split('\n').slice(skip??1).map(line=>{const cols=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){if(line[i]==='"'){inQ=!inQ;}else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=line[i];}cols.push(cur.trim());return cols;}).filter(r=>r.some(c=>c));}
+// ─── CSV / PARSING ────────────────────────────────────────────────────────────
+function parseCSV(text,skip){
+  return text.trim().split('\n').slice(skip??1).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur.trim());return cols;
+  }).filter(r=>r.some(c=>c));
+}
 function pct(v){if(!v||v===''||v==='-'||v==='N/A')return null;return parseFloat(String(v).replace('%',''))||null;}
 function fmtPct(v){if(!v||v===''||v==='-')return'—';const s=String(v).trim();return s.endsWith('%')?s:s+'%';}
-function parsePollRow(row,name,src){const d=src.colDate??2;return{date:row[d]||'',pollster:row[3]||name,client:row[4]||'',sample:row[5]||'',undecidedsExcl:(row[7]||'').trim().toUpperCase(),con:pct(row[10]),lab:pct(row[11]),lib:pct(row[12]),snp:pct(row[13]),alba:pct(row[14]),rfm:pct(row[15]),grn:pct(row[16]),others:pct(row[17]),_source:name};}
-function isHeadline(p,src){if(!p.date)return false;if(src.filterUndecideds&&p.undecidedsExcl==='N')return false;return true;}
-function parseDate(s){if(!s)return null;const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);}const d=new Date(s);return isNaN(d)?null:d;}
+function parsePollRow(row,name,src){
+  const d=src.colDate??2;
+  return{date:row[d]||'',pollster:row[3]||name,client:row[4]||'',sample:row[5]||'',
+    undecidedsExcl:(row[7]||'').trim().toUpperCase(),
+    con:pct(row[10]),lab:pct(row[11]),lib:pct(row[12]),snp:pct(row[13]),
+    alba:pct(row[14]),rfm:pct(row[15]),grn:pct(row[16]),others:pct(row[17]),_source:name};
+}
+function isHeadline(p,src){
+  if(!p.date)return false;
+  if(src.filterUndecideds&&p.undecidedsExcl==='N')return false;
+  return true;
+}
+function parseDate(s){
+  if(!s)return null;
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){const y=m[3].length===2?'20'+m[3]:m[3];return new Date(`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);}
+  const d=new Date(s);return isNaN(d)?null:d;
+}
 function fmtDate(s){const d=parseDate(s);return d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}):s;}
 function sortByDate(arr){return arr.slice().sort((a,b)=>{const da=parseDate(a.date),db=parseDate(b.date);return(!da||!db)?0:da-db;});}
 function setStatus(dotId,stId,state,msg){document.getElementById(dotId).className='dot '+state;document.getElementById(stId).textContent=msg;}
 
-async function fetchCSV(src){try{const resp=await fetch(src.url);if(!resp.ok)throw new Error('HTTP '+resp.status);const polls=parseCSV(await resp.text(),src.skipRows).map(r=>parsePollRow(r,src.name,src)).filter(p=>isHeadline(p,src));setStatus(src.dotId,src.stId,polls.length?'ok':'empty',`${src.name}: ${polls.length} poll${polls.length!==1?'s':''}`);return polls;}catch(e){setStatus(src.dotId,src.stId,'error',`${src.name}: failed`);return[];}}
+async function fetchCSV(src){
+  try{
+    const resp=await fetch(src.url);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const polls=parseCSV(await resp.text(),src.skipRows)
+      .map(r=>parsePollRow(r,src.name,src))
+      .filter(p=>isHeadline(p,src));
+    setStatus(src.dotId,src.stId,polls.length?'ok':'empty',`${src.name}: ${polls.length} poll${polls.length!==1?'s':''}`);
+    return polls;
+  }catch(e){setStatus(src.dotId,src.stId,'error',`${src.name}: failed`);return[];}
+}
 
-async function loadAll(){const btn=document.getElementById('refreshBtn');btn.classList.add('loading');btn.textContent='&#8635; Loading…';[...SOURCES.constituency,...SOURCES.list].forEach(s=>setStatus(s.dotId,s.stId,'loading',s.name+'…'));setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'loading','Incumbency…');setStatus('dot-pr','st-pr','loading','Postrat…');const[cRes,lRes]=await Promise.all([Promise.all(SOURCES.constituency.map(fetchCSV)),Promise.all(SOURCES.list.map(fetchCSV))]);constPolls=sortByDate(cRes.flat());listPolls=sortByDate(lRes.flat());try{const resp=await fetch(SOURCES.incumbency.url);const rows=parseCSV(await resp.text(),1);incumbency=rows.map(r=>({constituency:r[0]||'',region:r[1]||'',winner2021:r[2]||'',winnerParty:r[3]||'',runnerUp:r[4]||'',runnerUpParty:r[5]||'',voteShare:r[6]||'',majority:r[7]||'',incumbentMSP:r[8]||'',standing:r[9]||'',incumbentParty:r[10]||'',retirementRisk:r[11]||'',candidate2026:r[12]||'',candidateParty:r[13]||'',source:r[14]||'',notes:r[15]||'',boundaryChange:r[16]||''})).filter(r=>r.constituency);setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'ok',`Incumbency: ${incumbency.length} constituencies`);buildRegionFilters();}catch(e){setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'error','Incumbency: failed');incumbency=[];}if(SOURCES.postrat.url){try{const resp=await fetch(SOURCES.postrat.url);if(!resp.ok)throw new Error('HTTP '+resp.status);postratData=await resp.json();const n=Object.keys(postratData.constituencies||{}).length;setStatus('dot-pr','st-pr','ok',`Postrat: ${n} constituencies`);const pbtn=document.getElementById('btnPostrat');pbtn.disabled=false;pbtn.title='Switch to demographically-adjusted R estimates';}catch(e){postratData=null;setStatus('dot-pr','st-pr','error','Postrat: failed');}}else{setStatus('dot-pr','st-pr','empty','Postrat: URL not set');}const now=new Date();document.getElementById('lastUpdated').textContent=now.toLocaleString('en-GB');document.getElementById('st-updated').textContent='Updated '+now.toLocaleTimeString('en-GB');btn.classList.remove('loading');btn.textContent='&#8635; Refresh';render();}
+async function loadAll(){
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('loading');btn.textContent='&#8635; Loading…';
+  [...SOURCES.constituency,...SOURCES.list].forEach(s=>setStatus(s.dotId,s.stId,'loading',s.name+'…'));
+  setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'loading','Incumbency…');
+  setStatus('dot-pr','st-pr','loading','Postrat…');
+  const[cRes,lRes]=await Promise.all([
+    Promise.all(SOURCES.constituency.map(fetchCSV)),
+    Promise.all(SOURCES.list.map(fetchCSV))
+  ]);
+  constPolls=sortByDate(cRes.flat());
+  listPolls=sortByDate(lRes.flat());
+  try{
+    const resp=await fetch(SOURCES.incumbency.url);
+    const rows=parseCSV(await resp.text(),1);
+    incumbency=rows.map(r=>({
+      constituency:r[0]||'',region:r[1]||'',winner2021:r[2]||'',winnerParty:r[3]||'',
+      runnerUp:r[4]||'',runnerUpParty:r[5]||'',voteShare:r[6]||'',majority:r[7]||'',
+      incumbentMSP:r[8]||'',standing:r[9]||'',incumbentParty:r[10]||'',
+      retirementRisk:r[11]||'',candidate2026:r[12]||'',candidateParty:r[13]||'',
+      source:r[14]||'',notes:r[15]||'',boundaryChange:r[16]||''
+    })).filter(r=>r.constituency);
+    setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'ok',`Incumbency: ${incumbency.length} constituencies`);
+    buildRegionFilters();
+  }catch(e){setStatus(SOURCES.incumbency.dotId,SOURCES.incumbency.stId,'error','Incumbency: failed');incumbency=[];}
+  if(SOURCES.postrat.url){
+    try{
+      const resp=await fetch(SOURCES.postrat.url);
+      if(!resp.ok)throw new Error('HTTP '+resp.status);
+      postratData=await resp.json();
+      const n=Object.keys(postratData.constituencies||{}).length;
+      setStatus('dot-pr','st-pr','ok',`Postrat: ${n} constituencies`);
+      const pbtn=document.getElementById('btnPostrat');
+      pbtn.disabled=false;pbtn.title='Switch to demographically-adjusted R estimates';
+    }catch(e){postratData=null;setStatus('dot-pr','st-pr','error','Postrat: failed');}
+  }else{setStatus('dot-pr','st-pr','empty','Postrat: URL not set');}
+  const now=new Date();
+  document.getElementById('lastUpdated').textContent=now.toLocaleString('en-GB');
+  document.getElementById('st-updated').textContent='Updated '+now.toLocaleTimeString('en-GB');
+  btn.classList.remove('loading');btn.textContent='&#8635; Refresh';
+  render();
+}
 
-function latestPerPollster(polls){const by={};polls.forEach(p=>{const ex=by[p._source];if(!ex){by[p._source]=p;return;}const pd=parseDate(p.date),ed=parseDate(ex.date);if(!pd||!ed)return;if(pd>ed)by[p._source]=p;else if(pd.getTime()===ed.getTime()&&(parseInt(p.sample)||0)>(parseInt(ex.sample)||0))by[p._source]=p;});return Object.values(by);}
-function computeAverage(polls){const latest=latestPerPollster(polls);if(!latest.length)return null;const avg={_sources:latest.map(p=>p._source),_latestDates:latest.map(p=>fmtDate(p.date))};PARTIES.forEach(pt=>{const vals=latest.map(p=>p[pt.key]).filter(v=>v!==null);avg[pt.key]=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10:null;});return avg;}
+// ─── AVERAGES ─────────────────────────────────────────────────────────────────
+function latestPerPollster(polls){
+  const by={};
+  polls.forEach(p=>{
+    const ex=by[p._source];
+    if(!ex){by[p._source]=p;return;}
+    const pd=parseDate(p.date),ed=parseDate(ex.date);
+    if(!pd||!ed)return;
+    if(pd>ed)by[p._source]=p;
+    else if(pd.getTime()===ed.getTime()&&(parseInt(p.sample)||0)>(parseInt(ex.sample)||0))by[p._source]=p;
+  });
+  return Object.values(by);
+}
+function computeAverage(polls){
+  const latest=latestPerPollster(polls);
+  if(!latest.length)return null;
+  const avg={_sources:latest.map(p=>p._source),_latestDates:latest.map(p=>fmtDate(p.date))};
+  PARTIES.forEach(pt=>{
+    const vals=latest.map(p=>p[pt.key]).filter(v=>v!==null);
+    avg[pt.key]=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10:null;
+  });
+  return avg;
+}
 
-function renderLatestStrip(polls,stripId,metaId){const strip=document.getElementById(stripId),meta=document.getElementById(metaId);if(!polls.length){strip.innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:28px">No data</div>`;meta.textContent='';return;}const avg=computeAverage(polls);if(!avg)return;strip.innerHTML=PARTIES.map(p=>`<div class="party-chip"><div class="party-dot" style="background:${p.color}"></div><div class="party-chip-name">${p.label}</div><div class="party-chip-pct" style="color:${p.color}">${avg[p.key]!==null?avg[p.key]+'%':'—'}</div></div>`).join('');meta.textContent=`Headline average (undecideds excl.) · `+avg._sources.map((s,i)=>`${s} (${avg._latestDates[i]})`).join(' · ');}
+// ─── POLLING TAB ──────────────────────────────────────────────────────────────
+function renderLatestStrip(polls,stripId,metaId){
+  const strip=document.getElementById(stripId),meta=document.getElementById(metaId);
+  if(!polls.length){strip.innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:28px">No data</div>`;meta.textContent='';return;}
+  const avg=computeAverage(polls);if(!avg)return;
+  strip.innerHTML=PARTIES.map(p=>`<div class="party-chip"><div class="party-dot" style="background:${p.color}"></div><div class="party-chip-name">${p.label}</div><div class="party-chip-pct" style="color:${p.color}">${avg[p.key]!==null?avg[p.key]+'%':'—'}</div></div>`).join('');
+  meta.textContent=`Headline average (undecideds excl.) · `+avg._sources.map((s,i)=>`${s} (${avg._latestDates[i]})`).join(' · ');
+}
 
 let constChart,listChart;
 const CHART_OPTS={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7a8aaa',font:{family:"'IBM Plex Mono'",size:10},boxWidth:10,boxHeight:10,padding:14}},tooltip:{backgroundColor:'#1a2235',borderColor:'#2a3450',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#7a8aaa',titleFont:{family:"'IBM Plex Mono'",size:11},bodyFont:{family:"'IBM Plex Mono'",size:10},callbacks:{label:ctx=>`  ${ctx.dataset.label}: ${ctx.parsed.y!==null?ctx.parsed.y+'%':'—'}`}}},scales:{x:{grid:{color:'rgba(42,52,80,.4)'},ticks:{color:'#4a5878',font:{family:"'IBM Plex Mono'",size:10},maxRotation:45}},y:{min:0,max:55,grid:{color:'rgba(42,52,80,.4)'},ticks:{color:'#4a5878',font:{family:"'IBM Plex Mono'",size:10},callback:v=>v+'%'}}},elements:{point:{radius:3,hoverRadius:5},line:{tension:.3,borderWidth:2}}};
 function buildDatasets(polls){return PARTIES.map(p=>({label:p.label,data:polls.map(poll=>poll[p.key]),borderColor:p.color,backgroundColor:p.color+'18',pointBackgroundColor:p.color,fill:false,spanGaps:true}));}
-function initCharts(){constChart=new Chart(document.getElementById('constituencyChart').getContext('2d'),{type:'line',data:{labels:[],datasets:buildDatasets([])},options:JSON.parse(JSON.stringify(CHART_OPTS))});listChart=new Chart(document.getElementById('listChart').getContext('2d'),{type:'line',data:{labels:[],datasets:buildDatasets([])},options:JSON.parse(JSON.stringify(CHART_OPTS))});}
-function updateCharts(){[[constChart,constPolls,'constChartMeta'],[listChart,listPolls,'listChartMeta']].forEach(([chart,polls,mid])=>{if(!polls.length){document.getElementById(mid).textContent='No data';return;}chart.data.labels=polls.map(p=>fmtDate(p.date));chart.data.datasets=buildDatasets(polls);chart.update('active');document.getElementById(mid).textContent=`${polls.length} polls · ${[...new Set(polls.map(p=>p._source))].join(', ')}`;});}
-function renderPollsterCards(polls,containerId){const el=document.getElementById(containerId);const pollsters=[...new Set(polls.map(p=>p._source))];if(!pollsters.length){el.innerHTML=`<div class="empty-state" style="grid-column:1/-1">No data</div>`;return;}el.innerHTML=pollsters.map(name=>{const latest=latestPerPollster(polls.filter(p=>p._source===name))[0];if(!latest)return'';const color=POLLSTER_COLORS[name]||'#7a8aaa';return`<div class="pollster-card"><div class="pollster-card-hd"><div class="pollster-card-name" style="color:${color}">${name}</div><div class="pollster-card-date">${fmtDate(latest.date)}${latest.client?' · '+latest.client:''}</div></div><div class="pollster-bars">${PARTIES.map(p=>`<div class="pollster-bar-row"><div class="pollster-bar-label" style="color:${p.color}">${p.label}</div><div class="pollster-bar-track"><div class="pollster-bar-fill" style="width:${latest[p.key]||0}%;background:${p.color}"></div></div><div class="pollster-bar-pct" style="color:${p.color}">${latest[p.key]!==null?latest[p.key]+'%':'—'}</div></div>`).join('')}</div></div>`;}).join('');}
+function initCharts(){
+  constChart=new Chart(document.getElementById('constituencyChart').getContext('2d'),{type:'line',data:{labels:[],datasets:buildDatasets([])},options:JSON.parse(JSON.stringify(CHART_OPTS))});
+  listChart=new Chart(document.getElementById('listChart').getContext('2d'),{type:'line',data:{labels:[],datasets:buildDatasets([])},options:JSON.parse(JSON.stringify(CHART_OPTS))});
+}
+function updateCharts(){
+  [[constChart,constPolls,'constChartMeta'],[listChart,listPolls,'listChartMeta']].forEach(([chart,polls,mid])=>{
+    if(!polls.length){document.getElementById(mid).textContent='No data';return;}
+    chart.data.labels=polls.map(p=>fmtDate(p.date));
+    chart.data.datasets=buildDatasets(polls);
+    chart.update('active');
+    document.getElementById(mid).textContent=`${polls.length} polls · ${[...new Set(polls.map(p=>p._source))].join(', ')}`;
+  });
+}
+function renderPollsterCards(polls,containerId){
+  const el=document.getElementById(containerId);
+  const pollsters=[...new Set(polls.map(p=>p._source))];
+  if(!pollsters.length){el.innerHTML=`<div class="empty-state" style="grid-column:1/-1">No data</div>`;return;}
+  el.innerHTML=pollsters.map(name=>{
+    const latest=latestPerPollster(polls.filter(p=>p._source===name))[0];
+    if(!latest)return'';
+    const color=POLLSTER_COLORS[name]||'#7a8aaa';
+    return`<div class="pollster-card"><div class="pollster-card-hd"><div class="pollster-card-name" style="color:${color}">${name}</div><div class="pollster-card-date">${fmtDate(latest.date)}${latest.client?' · '+latest.client:''}</div></div><div class="pollster-bars">${PARTIES.map(p=>`<div class="pollster-bar-row"><div class="pollster-bar-label" style="color:${p.color}">${p.label}</div><div class="pollster-bar-track"><div class="pollster-bar-fill" style="width:${latest[p.key]||0}%;background:${p.color}"></div></div><div class="pollster-bar-pct" style="color:${p.color}">${latest[p.key]!==null?latest[p.key]+'%':'—'}</div></div>`).join('')}</div></div>`;
+  }).join('');
+}
 
-function partyColor(name){if(!name)return'#7a8aaa';const lc=name.toLowerCase();const map={conservative:'#0087DC',labour:'#E4003B','lib dem':'#FAA61A',liberal:'#FAA61A',snp:'#FDF38E',alba:'#005EB8',reform:'#12B6CF',green:'#00B140',independent:'#94a3b8'};for(const[k,v]of Object.entries(map))if(lc.includes(k))return v;return'#7a8aaa';}
-function personBadge(name,party){if(!name&&!party)return'—';const col=partyColor(party||name);const pill=party?`<span style="background:${col}22;color:${col};border:1px solid ${col}44;padding:1px 6px;font-size:.57rem;white-space:nowrap">${party}</span>`:'';return`<span style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${name||''}${pill}</span>`;}
-function buildRegionFilters(){const regions=[...new Set(incumbency.map(r=>r.region).filter(Boolean))].sort();document.getElementById('regionFilters').innerHTML=`<span class="filter-label">Region:</span><button class="filter-btn active" onclick="filterRegion('all',this)">All</button>`+regions.map(r=>`<button class="filter-btn" onclick="filterRegion(${JSON.stringify(r)},this)">${r}</button>`).join('');}
-function filterRegion(region,btn){document.querySelectorAll('#regionFilters .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeRegion=region;renderIncumbency();}
-function renderIncumbency(){const data=activeRegion==='all'?incumbency:incumbency.filter(r=>r.region===activeRegion);document.getElementById('inc-yes').textContent=data.filter(r=>r.standing.toLowerCase()==='yes').length;document.getElementById('inc-no').textContent=data.filter(r=>r.standing.toLowerCase()==='no').length;document.getElementById('inc-unknown').textContent=data.filter(r=>!['yes','no'].includes(r.standing.toLowerCase())).length;const tbody=document.getElementById('incTableBody');if(!data.length){tbody.innerHTML=`<tr><td colspan="10" class="empty-state">No data</td></tr>`;return;}tbody.innerHTML=data.map(r=>{const sc=r.standing.toLowerCase()==='yes'?'yes':r.standing.toLowerCase()==='no'?'no':'unk';const iCol=partyColor(r.incumbentParty),cCol=partyColor(r.candidateParty);const changed=r.incumbentParty&&r.candidateParty&&r.incumbentParty.toLowerCase()!==r.candidateParty.toLowerCase();let partyCell;if(!r.incumbentParty||!r.candidateParty){partyCell='—';}else if(changed){partyCell=`<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:.57rem">${r.incumbentParty}</span><span style="color:var(--text-dim);margin:0 3px">→</span><span style="background:${cCol}22;color:${cCol};border:1px solid ${cCol}44;padding:1px 6px;font-size:.57rem">${r.candidateParty}</span>`;}else{partyCell=`<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:.57rem">${r.incumbentParty}</span><span style="color:var(--text-dim);font-size:.58rem;margin-left:4px">same</span>`;}const bc=r.boundaryChange&&r.boundaryChange.toUpperCase()==='YES'?` <span style="color:var(--accent);font-size:.54rem" title="Boundary change">BC</span>`:'';return`<tr><td class="cname">${r.constituency}${bc}</td><td style="font-size:.63rem">${r.region}</td><td>${personBadge(r.winner2021,r.winnerParty)}</td><td>${personBadge(r.runnerUp,r.runnerUpParty)}</td><td style="font-size:.65rem">${fmtPct(r.majority)}</td><td style="color:var(--text)">${r.incumbentMSP||'—'}</td><td><span class="${sc}">${r.standing||'Unknown'}</span></td><td>${personBadge(r.candidate2026,r.candidateParty)}</td><td>${partyCell}</td><td style="font-size:.63rem;max-width:160px;white-space:normal;color:var(--text-dim)">${r.notes||''}</td></tr>`;}).join('');}
+// ─── INCUMBENCY TAB ───────────────────────────────────────────────────────────
+function partyColor(name){
+  if(!name)return'#7a8aaa';
+  const lc=name.toLowerCase();
+  const map={conservative:'#0087DC',labour:'#E4003B','lib dem':'#FAA61A',liberal:'#FAA61A',snp:'#FDF38E',alba:'#005EB8',reform:'#12B6CF',green:'#00B140',independent:'#94a3b8'};
+  for(const[k,v]of Object.entries(map))if(lc.includes(k))return v;
+  return'#7a8aaa';
+}
+function personBadge(name,party){
+  if(!name&&!party)return'—';
+  const col=partyColor(party||name);
+  const pill=party?`<span style="background:${col}22;color:${col};border:1px solid ${col}44;padding:1px 6px;font-size:.57rem;white-space:nowrap">${party}</span>`:'';
+  return`<span style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${name||''}${pill}</span>`;
+}
+function buildRegionFilters(){
+  const regions=[...new Set(incumbency.map(r=>r.region).filter(Boolean))].sort();
+  document.getElementById('regionFilters').innerHTML=`<span class="filter-label">Region:</span><button class="filter-btn active" onclick="filterRegion('all',this)">All</button>`+regions.map(r=>`<button class="filter-btn" onclick="filterRegion(${JSON.stringify(r)},this)">${r}</button>`).join('');
+}
+function filterRegion(region,btn){
+  document.querySelectorAll('#regionFilters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');activeRegion=region;renderIncumbency();
+}
+function renderIncumbency(){
+  const data=activeRegion==='all'?incumbency:incumbency.filter(r=>r.region===activeRegion);
+  document.getElementById('inc-yes').textContent=data.filter(r=>r.standing.toLowerCase()==='yes').length;
+  document.getElementById('inc-no').textContent=data.filter(r=>r.standing.toLowerCase()==='no').length;
+  document.getElementById('inc-unknown').textContent=data.filter(r=>!['yes','no'].includes(r.standing.toLowerCase())).length;
+  const tbody=document.getElementById('incTableBody');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="10" class="empty-state">No data</td></tr>`;return;}
+  tbody.innerHTML=data.map(r=>{
+    const sc=r.standing.toLowerCase()==='yes'?'yes':r.standing.toLowerCase()==='no'?'no':'unk';
+    const iCol=partyColor(r.incumbentParty),cCol=partyColor(r.candidateParty);
+    const changed=r.incumbentParty&&r.candidateParty&&r.incumbentParty.toLowerCase()!==r.candidateParty.toLowerCase();
+    let partyCell;
+    if(!r.incumbentParty||!r.candidateParty){partyCell='—';}
+    else if(changed){partyCell=`<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:.57rem">${r.incumbentParty}</span><span style="color:var(--text-dim);margin:0 3px">→</span><span style="background:${cCol}22;color:${cCol};border:1px solid ${cCol}44;padding:1px 6px;font-size:.57rem">${r.candidateParty}</span>`;}
+    else{partyCell=`<span style="background:${iCol}22;color:${iCol};border:1px solid ${iCol}44;padding:1px 6px;font-size:.57rem">${r.incumbentParty}</span><span style="color:var(--text-dim);font-size:.58rem;margin-left:4px">same</span>`;}
+    const bc=r.boundaryChange&&r.boundaryChange.toUpperCase()==='YES'?` <span style="color:var(--accent);font-size:.54rem" title="Boundary change">BC</span>`:'';
+    return`<tr><td class="cname">${r.constituency}${bc}</td><td style="font-size:.63rem">${r.region}</td><td>${personBadge(r.winner2021,r.winnerParty)}</td><td>${personBadge(r.runnerUp,r.runnerUpParty)}</td><td style="font-size:.65rem">${fmtPct(r.majority)}</td><td style="color:var(--text)">${r.incumbentMSP||'—'}</td><td><span class="${sc}">${r.standing||'Unknown'}</span></td><td>${personBadge(r.candidate2026,r.candidateParty)}</td><td>${partyCell}</td><td style="font-size:.63rem;max-width:160px;white-space:normal;color:var(--text-dim)">${r.notes||''}</td></tr>`;
+  }).join('');
+}
 
-function filterPollster(name,btn){document.querySelectorAll('#pollsterFilterRow .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activePollsterFilter=name;renderRawTables();}
-function renderPollsTable(polls,tbodyId){const tbody=document.getElementById(tbodyId);const data=activePollsterFilter==='all'?polls:polls.filter(p=>p._source===activePollsterFilter);const fmt=v=>v!==null?v+'%':'—';if(!data.length){tbody.innerHTML=`<tr><td colspan="12" class="empty-state">No polls</td></tr>`;return;}const tagCls=n=>{const l=n.toLowerCase();return l.includes('survation')?'survation':l.includes('norstat')?'norstat':l.includes('ipsos')?'ipsos':'';};tbody.innerHTML=[...data].reverse().map(p=>`<tr><td>${fmtDate(p.date)}</td><td class="col-p"><span class="ptag ${tagCls(p._source)}">${p._source}</span></td><td style="font-style:italic">${p.client}</td><td>${p.sample}</td><td style="color:var(--con)">${fmt(p.con)}</td><td style="color:var(--lab)">${fmt(p.lab)}</td><td style="color:var(--lib)">${fmt(p.lib)}</td><td style="color:var(--snp)">${fmt(p.snp)}</td><td style="color:var(--alba)">${fmt(p.alba)}</td><td style="color:var(--rfm)">${fmt(p.rfm)}</td><td style="color:var(--grn)">${fmt(p.grn)}</td><td>${fmt(p.others)}</td></tr>`).join('');}
+// ─── RAW DATA TAB ─────────────────────────────────────────────────────────────
+function filterPollster(name,btn){
+  document.querySelectorAll('#pollsterFilterRow .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');activePollsterFilter=name;renderRawTables();
+}
+function renderPollsTable(polls,tbodyId){
+  const tbody=document.getElementById(tbodyId);
+  const data=activePollsterFilter==='all'?polls:polls.filter(p=>p._source===activePollsterFilter);
+  const fmt=v=>v!==null?v+'%':'—';
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="12" class="empty-state">No polls</td></tr>`;return;}
+  const tagCls=n=>{const l=n.toLowerCase();return l.includes('survation')?'survation':l.includes('norstat')?'norstat':l.includes('ipsos')?'ipsos':'';};
+  tbody.innerHTML=[...data].reverse().map(p=>`<tr><td>${fmtDate(p.date)}</td><td class="col-p"><span class="ptag ${tagCls(p._source)}">${p._source}</span></td><td style="font-style:italic">${p.client}</td><td>${p.sample}</td><td style="color:var(--con)">${fmt(p.con)}</td><td style="color:var(--lab)">${fmt(p.lab)}</td><td style="color:var(--lib)">${fmt(p.lib)}</td><td style="color:var(--snp)">${fmt(p.snp)}</td><td style="color:var(--alba)">${fmt(p.alba)}</td><td style="color:var(--rfm)">${fmt(p.rfm)}</td><td style="color:var(--grn)">${fmt(p.grn)}</td><td>${fmt(p.others)}</td></tr>`).join('');
+}
 function renderRawTables(){renderPollsTable(constPolls,'constTableBody');renderPollsTable(listPolls,'listTableBody');}
 
-function normaliseParty(name){if(!name)return null;const lc=name.toLowerCase().trim();if(lc.includes('snp')||lc.includes('national'))return'snp';if(lc.includes('conserv')||lc.includes('tory'))return'con';if(lc.includes('labour'))return'lab';if(lc.includes('lib')||lc.includes('liberal'))return'lib';if(lc.includes('alba'))return'alba';if(lc.includes('reform'))return'rfm';if(lc.includes('green'))return'grn';return null;}
-function runDHondtAMS(listVotes,constWins,numSeats){const parties=Object.keys(listVotes).filter(k=>(listVotes[k]||0)>0);const listWon={};parties.forEach(k=>listWon[k]=0);const q={};parties.forEach(k=>q[k]=listVotes[k]/((constWins[k]||0)+1));for(let i=0;i<numSeats;i++){if(!parties.length)break;const w=parties.reduce((a,b)=>q[a]>q[b]?a:b);listWon[w]++;q[w]=listVotes[w]/(listWon[w]+(constWins[w]||0)+1);}return listWon;}
-function setMethod(method,btn){if(method==='postrat'&&!postratData){alert('Run holyrood_postrat.R then set SOURCES.postrat.url and Refresh.');return;}usePostrat=(method==='postrat');document.querySelectorAll('.method-row .tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderSeatProjection();}
+// ─── SEAT PROJECTION ──────────────────────────────────────────────────────────
+function normaliseParty(name){
+  if(!name)return null;
+  const lc=name.toLowerCase().trim();
+  if(lc.includes('snp')||lc.includes('national'))return'snp';
+  if(lc.includes('conserv')||lc.includes('tory'))return'con';
+  if(lc.includes('labour'))return'lab';
+  if(lc.includes('lib')||lc.includes('liberal'))return'lib';
+  if(lc.includes('alba'))return'alba';
+  if(lc.includes('reform'))return'rfm';
+  if(lc.includes('green'))return'grn';
+  return null;
+}
+
+function runDHondtAMS(listVotes,constWins,numSeats){
+  const parties=Object.keys(listVotes).filter(k=>(listVotes[k]||0)>0);
+  const listWon={};parties.forEach(k=>listWon[k]=0);
+  const q={};parties.forEach(k=>q[k]=listVotes[k]/((constWins[k]||0)+1));
+  for(let i=0;i<numSeats;i++){
+    if(!parties.length)break;
+    const w=parties.reduce((a,b)=>q[a]>q[b]?a:b);
+    listWon[w]++;
+    q[w]=listVotes[w]/(listWon[w]+(constWins[w]||0)+1);
+  }
+  return listWon;
+}
+
+function setMethod(method,btn){
+  if(method==='postrat'&&!postratData){alert('Run holyrood_postrat.R then set SOURCES.postrat.url and Refresh.');return;}
+  usePostrat=(method==='postrat');
+  document.querySelectorAll('.method-row .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderSeatProjection();
+}
 function computeProjection(){return usePostrat&&postratData?computePostrat():computeUNS();}
 
-function computeUNS(){const constAvg=computeAverage(constPolls),listAvg=computeAverage(listPolls);if(!constAvg||!listAvg||!incumbency.length)return null;const cSwing={},lSwing={};PARTIES.forEach(p=>{cSwing[p.key]=(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0);lSwing[p.key]=(listAvg[p.key]||0)-(BASELINES_2021.list[p.key]||0);});const nationalChallenger=PARTIES.filter(p=>constAvg[p.key]!==null).sort((a,b)=>(constAvg[b.key]||0)-(constAvg[a.key]||0)).map(p=>p.key);const cbr={};incumbency.forEach(seat=>{const region=seat.region||'Unknown';if(!cbr[region]){cbr[region]={};PARTIES.forEach(p=>cbr[region][p.key]=0);}const wKey=normaliseParty(seat.winnerParty);if(!wKey)return;const wShare=parseFloat(String(seat.voteShare).replace(/[%,]/g,''))||null;if(!wShare||wShare<=0){cbr[region][wKey]++;return;}const rawMaj=parseFloat(String(seat.majority).replace(/[%,]/g,''))||null;let marginPp;if(rawMaj&&rawMaj>0&&rawMaj<=50){marginPp=rawMaj;}else if(rawMaj&&rawMaj>50){marginPp=wShare>=60?22:wShare>=55?16:wShare>=50?10:wShare>=45?6:4;}else{marginPp=wShare>=55?15:wShare>=48?8:5;}const rShare=Math.max(0,wShare-marginPp);let rKey=normaliseParty(seat.runnerUpParty);if(!rKey)rKey=nationalChallenger.find(k=>k!==wKey)||null;const snpDamp=(wKey==='snp'&&SOURCES.snp_swing_damp)?SOURCES.snp_swing_damp:1;const projW=wShare+(cSwing[wKey]||0)*snpDamp;const projR=rKey?rShare+(cSwing[rKey]||0):rShare;let winner;if(wKey==='snp'&&SOURCES.snp_floor_pct&&projW>=SOURCES.snp_floor_pct){winner='snp';}else{winner=projW>=projR?wKey:rKey;}if(winner&&cbr[region][winner]!==undefined)cbr[region][winner]++;});return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);}
+// ─── IMPROVED UNS MODEL ───────────────────────────────────────────────────────
+// Changes vs prior version:
+//  1. No snp_swing_damp — full swing applied to all parties equally.
+//  2. No snp_floor_pct — SNP can lose any seat on the numbers.
+//  3. Multi-party competition: all parties' projected shares are compared,
+//     not just a two-way winner vs runner-up race. Third parties can win.
+//  4. List vote uses actual polling average, not a hardcoded override.
+function computeUNS(){
+  const constAvg=computeAverage(constPolls),listAvg=computeAverage(listPolls);
+  if(!constAvg||!listAvg||!incumbency.length)return null;
 
-function computePostrat(){const listAvg=computeAverage(listPolls),constAvg=computeAverage(constPolls);if(!listAvg)return null;const cSwing={},lSwing={};PARTIES.forEach(p=>{cSwing[p.key]=constAvg?(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0):0;lSwing[p.key]=(listAvg[p.key]||0)-(BASELINES_2021.list[p.key]||0);});const cbr={};const c2r={};incumbency.forEach(r=>c2r[r.constituency.toLowerCase().trim()]=r.region);Object.entries(postratData.constituencies).forEach(([name,shares])=>{const region=c2r[name.toLowerCase().trim()]||'Unknown';if(!cbr[region]){cbr[region]={};PARTIES.forEach(p=>cbr[region][p.key]=0);}const w=shares.projected_winner;if(w&&cbr[region][w]!==undefined)cbr[region][w]++;});return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);}
+  // Compute national swing vs 2021 for each party
+  const cSwing={},lSwing={};
+  PARTIES.forEach(p=>{
+    cSwing[p.key]=(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0);
+    lSwing[p.key]=(listAvg[p.key]||0)-(BASELINES_2021.list[p.key]||0);
+  });
 
-function buildProjection(constByRegion,listAvg,constAvg,cSwing,lSwing){const lv=SOURCES.list_vote_override||{};const listVotes={};PARTIES.forEach(p=>{listVotes[p.key]=(SOURCES.list_vote_override&&lv[p.key]!=null)?lv[p.key]:(listAvg[p.key]||0);});const totalConst={},totalList={};PARTIES.forEach(p=>{totalConst[p.key]=0;totalList[p.key]=0;});const regionBreakdown={};Object.keys(constByRegion).forEach(region=>{const cWins=constByRegion[region],lWins=runDHondtAMS(listVotes,cWins,7);regionBreakdown[region]={constituency:{...cWins},list:{...lWins}};PARTIES.forEach(p=>{totalConst[p.key]+=cWins[p.key]||0;totalList[p.key]+=lWins[p.key]||0;});});const total={};PARTIES.forEach(p=>total[p.key]=(totalConst[p.key]||0)+(totalList[p.key]||0));return{constituency:totalConst,list:totalList,total,regionBreakdown,swing:{constituency:cSwing,list:lSwing},pollsterSources:constAvg?constAvg._sources:['Postrat (R)'],latestDates:constAvg?constAvg._latestDates:[postratData?.meta?.generated?.slice(0,10)||'—'],totalProjected:PARTIES.reduce((s,p)=>s+total[p.key],0),constCovered:incumbency.length,listCovered:Object.keys(constByRegion).length};}
+  const cbr={};
+  incumbency.forEach(seat=>{
+    const region=seat.region||'Unknown';
+    if(!cbr[region]){cbr[region]={};PARTIES.forEach(p=>cbr[region][p.key]=0);}
 
-function renderHemicycle(proj){const ROWS=[11,17,21,24,27,29],RADII=[65,95,125,155,185,215];const W=520,H=240,cx=W/2,cy=230;const seats=[];LR_ORDER.forEach(key=>{const party=PARTIES.find(p=>p.key===key),n=proj.total[key]||0;for(let i=0;i<n;i++)seats.push({color:party.color,label:party.label});});let circles='',si=0;ROWS.forEach((count,ri)=>{const r=RADII[ri];for(let i=0;i<count;i++){if(si>=seats.length)break;const angle=Math.PI*(i+.5)/count,x=(cx-r*Math.cos(angle)).toFixed(1),y=(cy-r*Math.sin(angle)).toFixed(1),s=seats[si++];circles+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${s.color}" opacity=".88"><title>${s.label}</title></circle>`;}});const majLine=`<line x1="${cx}" y1="${cy+2}" x2="${cx}" y2="${cy-RADII[5]-14}" stroke="#f0c04066" stroke-width="1.5" stroke-dasharray="4,3"/><text x="${cx+5}" y="${cy-RADII[5]-17}" fill="#f0c040" font-size="8.5" font-family="IBM Plex Mono" opacity=".8">65 — majority</text>`;return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto">${circles}${majLine}</svg>`;}
-function renderSeatBar(proj){const wrap=document.getElementById('seatBarWrap');if(!wrap)return;const segs=LR_ORDER.map(key=>{const party=PARTIES.find(p=>p.key===key),n=proj.total[key]||0;if(!n)return'';return`<div class="seat-bar-seg" style="width:${(n/129*100).toFixed(2)}%;background:${party.color}" title="${party.label}: ${n}"></div>`;}).join('');const mp=(65/129*100).toFixed(3);wrap.innerHTML=`<div class="seat-bar-outer"><div class="seat-bar-maj-label" style="left:${mp}%">65</div><div class="seat-bar">${segs}</div><div class="seat-bar-maj-line" style="left:${mp}%"></div></div><div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:.56rem;color:var(--text-dim)"><span>← left</span><span>right →</span></div>`;}
-function renderHorizBars(seats,containerId,outOf){const el=document.getElementById(containerId);if(!el)return;const maxN=Math.max(1,...PARTIES.map(p=>seats[p.key]||0));el.innerHTML=PARTIES.filter(p=>(seats[p.key]||0)>0).sort((a,b)=>(seats[b.key]||0)-(seats[a.key]||0)).map(p=>{const n=seats[p.key]||0,bw=(n/maxN*100).toFixed(1);return`<div class="hbar-row"><div class="hbar-name" style="color:${p.color}">${p.label}</div><div class="hbar-track"><div class="hbar-fill" style="width:${bw}%;background:${p.color}55"><span class="hbar-n" style="color:${p.color}">${n}</span></div></div><div class="hbar-pct">${(n/outOf*100).toFixed(0)}%</div></div>`;}).join('');}
-function renderSwingGrid(swing){const el=document.getElementById('swingGrid');if(!el)return;el.innerHTML=SEAT_PARTIES.map(p=>{const cs=swing.constituency[p.key]||0,ls=swing.list[p.key]||0;const cls=cs>0.3?'s-pos':cs<-0.3?'s-neg':'s-neu';const sign=cs>0?'+':'';return`<div class="swing-chip"><div class="swing-chip-party" style="color:${p.color}">${p.label}</div><div class="swing-chip-val ${cls}">${sign}${cs.toFixed(1)}</div><div class="swing-chip-sub">const pp</div><div style="font-family:'IBM Plex Mono',monospace;font-size:.54rem;color:var(--text-dim);margin-top:3px">list ${ls>0?'+':''}${ls.toFixed(1)}pp</div></div>`;}).join('');}
-function renderFlips(proj){const flipsLabel=document.getElementById('flipsLabel'),flipsWrap=document.getElementById('flipsWrap');if(!flipsLabel||!flipsWrap)return;const constAvg=computeAverage(constPolls);const cSwing={};if(constAvg)PARTIES.forEach(p=>cSwing[p.key]=(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0));const flips=[];incumbency.forEach(seat=>{const winner2021=normaliseParty(seat.winnerParty);if(!winner2021)return;let projWinner;if(usePostrat&&postratData){const key=seat.constituency.toLowerCase().trim();const found=Object.entries(postratData.constituencies).find(([k])=>k.toLowerCase().trim()===key);if(found)projWinner=found[1].projected_winner;}if(!projWinner&&constAvg){const wKey=normaliseParty(seat.winnerParty),rKey=normaliseParty(seat.runnerUpParty);if(!wKey)return;const wShare=parseFloat(String(seat.voteShare).replace('%',''))||50;const rawMaj=parseFloat(String(seat.majority).replace('%',''))||5;const maj=(rawMaj>0&&rawMaj<=50)?rawMaj:10;const rShare=Math.max(0,wShare-maj);const projW=wShare+(cSwing[wKey]||0),projR=rKey?rShare+(cSwing[rKey]||0):-999;projWinner=projW>=projR?wKey:rKey;}if(projWinner&&projWinner!==winner2021){const pp=PARTIES.find(p=>p.key===projWinner),wp=PARTIES.find(p=>p.key===winner2021);flips.push({constituency:seat.constituency,from:winner2021,fromColor:wp?.color||'#7a8aaa',to:projWinner,toColor:pp?.color||'#7a8aaa'});}});if(flips.length>0){flipsLabel.style.display='flex';flipsWrap.innerHTML=`<div class="flips-table-wrap"><table class="polls-table" style="min-width:460px"><thead><tr><th>Constituency</th><th>2021 winner</th><th>2026 projection</th></tr></thead><tbody>${flips.map(f=>`<tr><td style="color:var(--text)">${f.constituency}</td><td><span style="background:${f.fromColor}22;color:${f.fromColor};border:1px solid ${f.fromColor}44;padding:2px 8px;font-size:.65rem">${PARTIES.find(p=>p.key===f.from)?.label||f.from}</span></td><td><span style="background:${f.toColor}22;color:${f.toColor};border:1px solid ${f.toColor}44;padding:2px 8px;font-size:.65rem">${PARTIES.find(p=>p.key===f.to)?.label||f.to}</span></td></tr>`).join('')}</tbody></table></div>`;}else{flipsLabel.style.display='none';flipsWrap.innerHTML='';}}
-function renderRegionTable(breakdown){const tbody=document.getElementById('rgTableBody'),tfoot=document.getElementById('rgTableFoot');if(!tbody)return;const regions=Object.keys(breakdown).sort();const cols=['grn','snp','lib','lab','con','rfm'];const pByKey={};SEAT_PARTIES.forEach(p=>pByKey[p.key]=p);const grand={};cols.forEach(k=>grand[k]=0);regions.forEach(r=>{const{constituency:c,list:l}=breakdown[r];cols.forEach(k=>grand[k]+=(c[k]||0)+(l[k]||0));});const gTotal=cols.reduce((s,k)=>s+grand[k],0);tbody.innerHTML=regions.map(region=>{const{constituency:c,list:l}=breakdown[region];const rt=cols.reduce((s,k)=>s+(c[k]||0)+(l[k]||0),0);return`<tr><td class="rn">${region}</td>${cols.map(k=>{const tc=c[k]||0,tl=l[k]||0,tot=tc+tl,party=pByKey[k];return tot>0?`<td style="color:${party.color}">${tot}<span style="font-size:.54rem;color:var(--text-dim);margin-left:2px">(${tc}+${tl})</span></td>`:`<td style="color:var(--text-dim)">—</td>`;}).join('')}<td style="color:var(--text-muted)">${rt}</td></tr>`;}).join('');tfoot.innerHTML=`<tr><td class="rn">Total</td>${cols.map(k=>`<td style="color:${pByKey[k].color};font-weight:500">${grand[k]||0}</td>`).join('')}<td style="color:var(--text-muted);font-weight:500">${gTotal}</td></tr>`;}
+    const wKey=normaliseParty(seat.winnerParty);
+    if(!wKey)return;
 
-function renderSeatProjection(){const proj=computeProjection();if(!proj){document.getElementById('seatStrip').innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:28px">Click &#8635; Refresh to load data</div>`;return;}const srcEl=document.getElementById('spSources');if(srcEl)srcEl.textContent=proj.pollsterSources.map((s,i)=>`${s} (${proj.latestDates[i]})`).join(' · ');document.getElementById('seatStrip').innerHTML=SEAT_PARTIES.map(p=>{const tot=proj.total[p.key]||0,c=proj.constituency[p.key]||0,l=proj.list[p.key]||0;const ref=BASELINES_2021.seats[p.key]||0,diff=tot-ref;const diffStr=diff>0?`+${diff}`:diff===0?'±0':`${diff}`;const diffCol=diff>0?'#4ade80':diff<0?'#f87171':'var(--text-dim)';const snpNote=(p.key==='snp'&&l===0)?`<div style="font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--text-dim);margin-top:3px;line-height:1.3">0 list seats<br>AMS suppression</div>`:'';return`<div class="seat-chip"><div class="party-dot" style="background:${p.color}"></div><div class="seat-total" style="color:${p.color}">${tot}</div><div class="seat-delta" style="color:${diffCol}">${diffStr} vs 2021</div><div class="seat-label">${p.label}</div><div class="seat-split">${c}C · ${l}L</div>${snpNote}</div>`;}).join('');const largest=PARTIES.slice().sort((a,b)=>(proj.total[b.key]||0)-(proj.total[a.key]||0))[0];const largestN=proj.total[largest.key]||0;document.getElementById('majNote').innerHTML=largestN>=65?`<span style="color:#4ade80">${largest.label} projected majority · ${largestN} seats</span>`:`<span style="color:#f87171">No majority projected · largest: ${largest.label} ${largestN} · ${65-largestN} short</span>`;renderSeatBar(proj);const hemEl=document.getElementById('hemicycleWrap');if(hemEl)hemEl.innerHTML=renderHemicycle(proj);renderHorizBars(proj.constituency,'constSeatsBars',proj.constCovered||73);renderHorizBars(proj.list,'listSeatsBars',proj.listCovered*7||56);const amsNote=document.getElementById('amsNote');if(amsNote)amsNote.style.display=(proj.list['snp']||0)<3?'block':'none';renderSwingGrid(proj.swing);renderFlips(proj);const covEl=document.getElementById('covNote');if(covEl)covEl.textContent=`${proj.constCovered} constituencies · ${proj.listCovered} regions · `+(proj.totalProjected<129?`${proj.totalProjected} seats projected (${129-proj.totalProjected} unallocated)`:'all 129 seats allocated');renderRegionTable(proj.regionBreakdown);}
+    // Parse winner's 2021 vote share
+    const wShare2021=parseFloat(String(seat.voteShare).replace(/[%,]/g,''))||null;
+    if(!wShare2021||wShare2021<=0){cbr[region][wKey]++;return;}
 
-function render(){renderLatestStrip(constPolls,'latestConstStrip','constAvgMeta');renderLatestStrip(listPolls,'latestListStrip','listAvgMeta');updateCharts();renderPollsterCards(constPolls,'constPollsterCards');renderPollsterCards(listPolls,'listPollsterCards');renderRawTables();renderIncumbency();if(document.getElementById('tab-seats').classList.contains('active'))renderSeatProjection();}
+    // Parse majority to reconstruct runner-up's 2021 share
+    const rawMaj=parseFloat(String(seat.majority).replace(/[%,]/g,''))||null;
+    let marginPp;
+    if(rawMaj&&rawMaj>0&&rawMaj<=50){marginPp=rawMaj;}
+    else if(rawMaj&&rawMaj>50){
+      // Majority stored as absolute votes rather than pp — estimate from vote share
+      marginPp=wShare2021>=60?22:wShare2021>=55?16:wShare2021>=50?10:wShare2021>=45?6:4;
+    }else{
+      marginPp=wShare2021>=55?15:wShare2021>=48?8:5;
+    }
+    const rShare2021=Math.max(0,wShare2021-marginPp);
+    const rKey=normaliseParty(seat.runnerUpParty);
+
+    // --- Project each party's share in this seat ---
+    // Winner and known runner-up: apply full UNS to their actual 2021 shares
+    const projShares={};
+    projShares[wKey]=Math.max(0, wShare2021+(cSwing[wKey]||0));
+    if(rKey) projShares[rKey]=Math.max(0, rShare2021+(cSwing[rKey]||0));
+
+    // Third-party challengers: use the national average directly as a
+    // conservative estimate of their local ceiling. This prevents a party
+    // polling 20% nationally from being invisible in every single seat.
+    PARTIES.forEach(p=>{
+      if(p.key===wKey||p.key===rKey){return;}
+      // Only include parties with meaningful national polling (>2%)
+      const natShare=constAvg[p.key]||0;
+      if(natShare>2){
+        // Estimate local share as national average — they weren't competitive
+        // in 2021 so we use national polling directly, but cap at rShare to
+        // avoid wildly overestimating breakthrough seats.
+        projShares[p.key]=Math.min(natShare, Math.max(natShare*0.8, rShare2021*0.5));
+      }
+    });
+
+    // Find the party with the highest projected share in this seat
+    let winner=wKey;
+    let winnerShare=projShares[wKey]||0;
+    Object.entries(projShares).forEach(([key,share])=>{
+      if(share>winnerShare){winner=key;winnerShare=share;}
+    });
+
+    if(winner&&cbr[region][winner]!==undefined)cbr[region][winner]++;
+  });
+
+  return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);
+}
+
+function computePostrat(){
+  const listAvg=computeAverage(listPolls),constAvg=computeAverage(constPolls);
+  if(!listAvg)return null;
+  const cSwing={},lSwing={};
+  PARTIES.forEach(p=>{
+    cSwing[p.key]=constAvg?(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0):0;
+    lSwing[p.key]=(listAvg[p.key]||0)-(BASELINES_2021.list[p.key]||0);
+  });
+  const cbr={};
+  const c2r={};incumbency.forEach(r=>c2r[r.constituency.toLowerCase().trim()]=r.region);
+  Object.entries(postratData.constituencies).forEach(([name,shares])=>{
+    const region=c2r[name.toLowerCase().trim()]||'Unknown';
+    if(!cbr[region]){cbr[region]={};PARTIES.forEach(p=>cbr[region][p.key]=0);}
+    const w=shares.projected_winner;
+    if(w&&cbr[region][w]!==undefined)cbr[region][w]++;
+  });
+  return buildProjection(cbr,listAvg,constAvg,cSwing,lSwing);
+}
+
+// ─── BUILD PROJECTION ─────────────────────────────────────────────────────────
+// Uses actual list polling averages (listAvg) for D'Hondt — no hardcoded overrides.
+function buildProjection(constByRegion,listAvg,constAvg,cSwing,lSwing){
+  // Use actual polling averages for list vote
+  const listVotes={};
+  PARTIES.forEach(p=>{ listVotes[p.key]=listAvg[p.key]||0; });
+
+  const totalConst={},totalList={};
+  PARTIES.forEach(p=>{totalConst[p.key]=0;totalList[p.key]=0;});
+  const regionBreakdown={};
+  Object.keys(constByRegion).forEach(region=>{
+    const cWins=constByRegion[region];
+    const lWins=runDHondtAMS(listVotes,cWins,7);
+    regionBreakdown[region]={constituency:{...cWins},list:{...lWins}};
+    PARTIES.forEach(p=>{totalConst[p.key]+=cWins[p.key]||0;totalList[p.key]+=lWins[p.key]||0;});
+  });
+  const total={};
+  PARTIES.forEach(p=>total[p.key]=(totalConst[p.key]||0)+(totalList[p.key]||0));
+  return{
+    constituency:totalConst,list:totalList,total,regionBreakdown,
+    swing:{constituency:cSwing,list:lSwing},
+    pollsterSources:constAvg?constAvg._sources:['Postrat (R)'],
+    latestDates:constAvg?constAvg._latestDates:[postratData?.meta?.generated?.slice(0,10)||'—'],
+    totalProjected:PARTIES.reduce((s,p)=>s+total[p.key],0),
+    constCovered:incumbency.length,
+    listCovered:Object.keys(constByRegion).length
+  };
+}
+
+// ─── SEAT PROJECTION RENDERING ───────────────────────────────────────────────
+function renderHemicycle(proj){
+  const ROWS=[11,17,21,24,27,29],RADII=[65,95,125,155,185,215];
+  const W=520,H=240,cx=W/2,cy=230;
+  const seats=[];
+  LR_ORDER.forEach(key=>{const party=PARTIES.find(p=>p.key===key),n=proj.total[key]||0;for(let i=0;i<n;i++)seats.push({color:party.color,label:party.label});});
+  let circles='',si=0;
+  ROWS.forEach((count,ri)=>{
+    const r=RADII[ri];
+    for(let i=0;i<count;i++){
+      if(si>=seats.length)break;
+      const angle=Math.PI*(i+.5)/count,x=(cx-r*Math.cos(angle)).toFixed(1),y=(cy-r*Math.sin(angle)).toFixed(1),s=seats[si++];
+      circles+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${s.color}" opacity=".88"><title>${s.label}</title></circle>`;
+    }
+  });
+  const majLine=`<line x1="${cx}" y1="${cy+2}" x2="${cx}" y2="${cy-RADII[5]-14}" stroke="#f0c04066" stroke-width="1.5" stroke-dasharray="4,3"/><text x="${cx+5}" y="${cy-RADII[5]-17}" fill="#f0c040" font-size="8.5" font-family="IBM Plex Mono" opacity=".8">65 — majority</text>`;
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto">${circles}${majLine}</svg>`;
+}
+function renderSeatBar(proj){
+  const wrap=document.getElementById('seatBarWrap');if(!wrap)return;
+  const segs=LR_ORDER.map(key=>{const party=PARTIES.find(p=>p.key===key),n=proj.total[key]||0;if(!n)return'';return`<div class="seat-bar-seg" style="width:${(n/129*100).toFixed(2)}%;background:${party.color}" title="${party.label}: ${n}"></div>`;}).join('');
+  const mp=(65/129*100).toFixed(3);
+  wrap.innerHTML=`<div class="seat-bar-outer"><div class="seat-bar-maj-label" style="left:${mp}%">65</div><div class="seat-bar">${segs}</div><div class="seat-bar-maj-line" style="left:${mp}%"></div></div><div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:.56rem;color:var(--text-dim)"><span>← left</span><span>right →</span></div>`;
+}
+function renderHorizBars(seats,containerId,outOf){
+  const el=document.getElementById(containerId);if(!el)return;
+  const maxN=Math.max(1,...PARTIES.map(p=>seats[p.key]||0));
+  el.innerHTML=PARTIES.filter(p=>(seats[p.key]||0)>0).sort((a,b)=>(seats[b.key]||0)-(seats[a.key]||0)).map(p=>{
+    const n=seats[p.key]||0,bw=(n/maxN*100).toFixed(1);
+    return`<div class="hbar-row"><div class="hbar-name" style="color:${p.color}">${p.label}</div><div class="hbar-track"><div class="hbar-fill" style="width:${bw}%;background:${p.color}55"><span class="hbar-n" style="color:${p.color}">${n}</span></div></div><div class="hbar-pct">${(n/outOf*100).toFixed(0)}%</div></div>`;
+  }).join('');
+}
+function renderSwingGrid(swing){
+  const el=document.getElementById('swingGrid');if(!el)return;
+  el.innerHTML=SEAT_PARTIES.map(p=>{
+    const cs=swing.constituency[p.key]||0,ls=swing.list[p.key]||0;
+    const cls=cs>0.3?'s-pos':cs<-0.3?'s-neg':'s-neu';
+    const sign=cs>0?'+':'';
+    return`<div class="swing-chip"><div class="swing-chip-party" style="color:${p.color}">${p.label}</div><div class="swing-chip-val ${cls}">${sign}${cs.toFixed(1)}</div><div class="swing-chip-sub">const pp</div><div style="font-family:'IBM Plex Mono',monospace;font-size:.54rem;color:var(--text-dim);margin-top:3px">list ${ls>0?'+':''}${ls.toFixed(1)}pp</div></div>`;
+  }).join('');
+}
+function renderFlips(proj){
+  const flipsLabel=document.getElementById('flipsLabel'),flipsWrap=document.getElementById('flipsWrap');
+  if(!flipsLabel||!flipsWrap)return;
+  const constAvg=computeAverage(constPolls);
+  const cSwing={};
+  if(constAvg)PARTIES.forEach(p=>cSwing[p.key]=(constAvg[p.key]||0)-(BASELINES_2021.constituency[p.key]||0));
+  const flips=[];
+  incumbency.forEach(seat=>{
+    const winner2021=normaliseParty(seat.winnerParty);if(!winner2021)return;
+    let projWinner;
+    if(usePostrat&&postratData){
+      const key=seat.constituency.toLowerCase().trim();
+      const found=Object.entries(postratData.constituencies).find(([k])=>k.toLowerCase().trim()===key);
+      if(found)projWinner=found[1].projected_winner;
+    }
+    if(!projWinner&&constAvg){
+      const wKey=normaliseParty(seat.winnerParty);if(!wKey)return;
+      const wShare=parseFloat(String(seat.voteShare).replace('%',''))||50;
+      const rawMaj=parseFloat(String(seat.majority).replace('%',''))||5;
+      const maj=(rawMaj>0&&rawMaj<=50)?rawMaj:10;
+      const rShare=Math.max(0,wShare-maj);
+      const rKey=normaliseParty(seat.runnerUpParty);
+      const projShares={};
+      projShares[wKey]=Math.max(0,wShare+(cSwing[wKey]||0));
+      if(rKey)projShares[rKey]=Math.max(0,rShare+(cSwing[rKey]||0));
+      PARTIES.forEach(p=>{
+        if(p.key===wKey||p.key===rKey)return;
+        const natShare=constAvg[p.key]||0;
+        if(natShare>2)projShares[p.key]=Math.min(natShare,Math.max(natShare*0.8,rShare*0.5));
+      });
+      let best=wKey,bestShare=projShares[wKey]||0;
+      Object.entries(projShares).forEach(([k,s])=>{if(s>bestShare){best=k;bestShare=s;}});
+      projWinner=best;
+    }
+    if(projWinner&&projWinner!==winner2021){
+      const pp=PARTIES.find(p=>p.key===projWinner),wp=PARTIES.find(p=>p.key===winner2021);
+      flips.push({constituency:seat.constituency,from:winner2021,fromColor:wp?.color||'#7a8aaa',to:projWinner,toColor:pp?.color||'#7a8aaa'});
+    }
+  });
+  if(flips.length>0){
+    flipsLabel.style.display='flex';
+    flipsWrap.innerHTML=`<div class="flips-table-wrap"><table class="polls-table" style="min-width:460px"><thead><tr><th>Constituency</th><th>2021 winner</th><th>2026 projection</th></tr></thead><tbody>${flips.map(f=>`<tr><td style="color:var(--text)">${f.constituency}</td><td><span style="background:${f.fromColor}22;color:${f.fromColor};border:1px solid ${f.fromColor}44;padding:2px 8px;font-size:.65rem">${PARTIES.find(p=>p.key===f.from)?.label||f.from}</span></td><td><span style="background:${f.toColor}22;color:${f.toColor};border:1px solid ${f.toColor}44;padding:2px 8px;font-size:.65rem">${PARTIES.find(p=>p.key===f.to)?.label||f.to}</span></td></tr>`).join('')}</tbody></table></div>`;
+  }else{flipsLabel.style.display='none';flipsWrap.innerHTML='';}
+}
+function renderRegionTable(breakdown){
+  const tbody=document.getElementById('rgTableBody'),tfoot=document.getElementById('rgTableFoot');
+  if(!tbody)return;
+  const regions=Object.keys(breakdown).sort();
+  const cols=['grn','snp','lib','lab','con','rfm'];
+  const pByKey={};SEAT_PARTIES.forEach(p=>pByKey[p.key]=p);
+  const grand={};cols.forEach(k=>grand[k]=0);
+  regions.forEach(r=>{const{constituency:c,list:l}=breakdown[r];cols.forEach(k=>grand[k]+=(c[k]||0)+(l[k]||0));});
+  const gTotal=cols.reduce((s,k)=>s+grand[k],0);
+  tbody.innerHTML=regions.map(region=>{
+    const{constituency:c,list:l}=breakdown[region];
+    const rt=cols.reduce((s,k)=>s+(c[k]||0)+(l[k]||0),0);
+    return`<tr><td class="rn">${region}</td>${cols.map(k=>{const tc=c[k]||0,tl=l[k]||0,tot=tc+tl,party=pByKey[k];return tot>0?`<td style="color:${party.color}">${tot}<span style="font-size:.54rem;color:var(--text-dim);margin-left:2px">(${tc}+${tl})</span></td>`:`<td style="color:var(--text-dim)">—</td>`;}).join('')}<td style="color:var(--text-muted)">${rt}</td></tr>`;
+  }).join('');
+  tfoot.innerHTML=`<tr><td class="rn">Total</td>${cols.map(k=>`<td style="color:${pByKey[k].color};font-weight:500">${grand[k]||0}</td>`).join('')}<td style="color:var(--text-muted);font-weight:500">${gTotal}</td></tr>`;
+}
+
+function renderSeatProjection(){
+  const proj=computeProjection();
+  if(!proj){document.getElementById('seatStrip').innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:28px">Click &#8635; Refresh to load data</div>`;return;}
+  const srcEl=document.getElementById('spSources');
+  if(srcEl)srcEl.textContent=proj.pollsterSources.map((s,i)=>`${s} (${proj.latestDates[i]})`).join(' · ');
+  document.getElementById('seatStrip').innerHTML=SEAT_PARTIES.map(p=>{
+    const tot=proj.total[p.key]||0,c=proj.constituency[p.key]||0,l=proj.list[p.key]||0;
+    const ref=BASELINES_2021.seats[p.key]||0,diff=tot-ref;
+    const diffStr=diff>0?`+${diff}`:diff===0?'±0':`${diff}`;
+    const diffCol=diff>0?'#4ade80':diff<0?'#f87171':'var(--text-dim)';
+    const snpNote=(p.key==='snp'&&l===0)?`<div style="font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--text-dim);margin-top:3px;line-height:1.3">0 list seats<br>AMS suppression</div>`:'';
+    return`<div class="seat-chip"><div class="party-dot" style="background:${p.color}"></div><div class="seat-total" style="color:${p.color}">${tot}</div><div class="seat-delta" style="color:${diffCol}">${diffStr} vs 2021</div><div class="seat-label">${p.label}</div><div class="seat-split">${c}C · ${l}L</div>${snpNote}</div>`;
+  }).join('');
+  const largest=PARTIES.slice().sort((a,b)=>(proj.total[b.key]||0)-(proj.total[a.key]||0))[0];
+  const largestN=proj.total[largest.key]||0;
+  document.getElementById('majNote').innerHTML=largestN>=65?`<span style="color:#4ade80">${largest.label} projected majority · ${largestN} seats</span>`:`<span style="color:#f87171">No majority projected · largest: ${largest.label} ${largestN} · ${65-largestN} short</span>`;
+  renderSeatBar(proj);
+  const hemEl=document.getElementById('hemicycleWrap');if(hemEl)hemEl.innerHTML=renderHemicycle(proj);
+  renderHorizBars(proj.constituency,'constSeatsBars',proj.constCovered||73);
+  renderHorizBars(proj.list,'listSeatsBars',proj.listCovered*7||56);
+  const amsNote=document.getElementById('amsNote');if(amsNote)amsNote.style.display=(proj.list['snp']||0)<3?'block':'none';
+  renderSwingGrid(proj.swing);
+  renderFlips(proj);
+  const covEl=document.getElementById('covNote');
+  if(covEl)covEl.textContent=`${proj.constCovered} constituencies · ${proj.listCovered} regions · `+(proj.totalProjected<129?`${proj.totalProjected} seats projected (${129-proj.totalProjected} unallocated)`:'all 129 seats allocated');
+  renderRegionTable(proj.regionBreakdown);
+}
+
+// ─── MAIN RENDER ─────────────────────────────────────────────────────────────
+function render(){
+  renderLatestStrip(constPolls,'latestConstStrip','constAvgMeta');
+  renderLatestStrip(listPolls,'latestListStrip','listAvgMeta');
+  updateCharts();
+  renderPollsterCards(constPolls,'constPollsterCards');
+  renderPollsterCards(listPolls,'listPollsterCards');
+  renderRawTables();
+  renderIncumbency();
+  if(document.getElementById('tab-seats').classList.contains('active'))renderSeatProjection();
+}
 
 initCharts();
 loadAll();
